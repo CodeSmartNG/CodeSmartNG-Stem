@@ -1,0 +1,357 @@
+.email-confirmation-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 80vh;
+  padding: 20px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.email-confirmation-card {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  padding: 40px;
+  max-width: 500px;
+  width: 100%;
+  animation: slideUp 0.5s ease-out;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.confirmation-header {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.confirmation-icon {
+  font-size: 3rem;
+  margin-bottom: 15px;
+}
+
+.confirmation-header h2 {
+  color: #333;
+  margin: 0;
+  font-size: 1.8rem;
+  font-weight: 600;
+}
+
+.confirmation-content {
+  margin-bottom: 30px;
+}
+
+.confirmation-instructions {
+  text-align: center;
+  color: #666;
+  margin-bottom: 10px;
+  font-size: 1.1rem;
+}
+
+.confirmation-email {
+  text-align: center;
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #4a5568;
+  background: #f7fafc;
+  padding: 10px;
+  border-radius: 6px;
+  margin-bottom: 25px;
+  border: 1px solid #e2e8f0;
+}
+
+.confirmation-steps {
+  background: #f0f9ff;
+  border: 1px solid #bae6fd;
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 25px;
+}
+
+.confirmation-steps h3 {
+  color: #0369a1;
+  margin-top: 0;
+  margin-bottom: 15px;
+  font-size: 1.1rem;
+}
+
+.confirmation-steps ol {
+  margin: 0;
+  padding-left: 20px;
+  color: #475569;
+}
+
+.confirmation-steps li {
+  margin-bottom: 8px;
+  line-height: 1.5;
+}
+
+.manual-confirmation {
+  background: #fff7ed;
+  border: 1px solid #fed7aa;
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 25px;
+}
+
+.manual-confirmation h4 {
+  color: #c2410c;
+  margin-top: 0;
+  margin-bottom: 10px;
+  font-size: 1rem;
+}
+
+.demo-note {
+  color: #92400e;
+  font-size: 0.9rem;
+  margin-bottom: 15px;
+  line-height: 1.4;
+}
+
+.token-input-group {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.token-input {
+  flex: 1;
+  padding: 12px;
+  border: 2px solid #e2e8f0;
+  border-radius: 6px;
+  font-size: 1rem;
+  transition: border-color 0.3s ease;
+}
+
+.token-input:focus {
+  outline: none;
+  border-color: #4299e1;
+  box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.1);
+}
+
+.confirm-token-btn {
+  padding: 12px 20px;
+  background: #48bb78;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  white-space: nowrap;
+}
+
+.confirm-token-btn:hover:not(:disabled) {
+  background: #38a169;
+}
+
+.confirm-token-btn:disabled {
+  background: #a0aec0;
+  cursor: not-allowed;
+}
+
+.resend-section {
+  text-align: center;
+  margin-bottom: 25px;
+}
+
+.resend-section p {
+  color: #666;
+  margin-bottom: 15px;
+}
+
+.resend-btn {
+  padding: 12px 24px;
+  background: #4299e1;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.resend-btn:hover:not(:disabled) {
+  background: #3182ce;
+}
+
+.resend-btn:disabled {
+  background: #a0aec0;
+  cursor: not-allowed;
+}
+
+.resend-message {
+  margin-top: 10px;
+  padding: 8px 12px;
+  border-radius: 4px;
+  font-size: 0.9rem;
+}
+
+.resend-message.success {
+  background: #c6f6d5;
+  color: #22543d;
+  border: 1px solid #9ae6b4;
+}
+
+.resend-message.error {
+  background: #fed7d7;
+  color: #742a2a;
+  border: 1px solid #feb2b2;
+}
+
+.help-tips {
+  background: #f7fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 25px;
+}
+
+.help-tips h4 {
+  color: #4a5568;
+  margin-top: 0;
+  margin-bottom: 15px;
+  font-size: 1rem;
+}
+
+.help-tips ul {
+  margin: 0;
+  padding-left: 20px;
+  color: #718096;
+  font-size: 0.9rem;
+}
+
+.help-tips li {
+  margin-bottom: 6px;
+  line-height: 1.4;
+}
+
+.confirmation-actions {
+  text-align: center;
+}
+
+.cancel-btn {
+  padding: 12px 30px;
+  background: #718096;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.cancel-btn:hover {
+  background: #4a5568;
+}
+
+.demo-info {
+  margin-top: 25px;
+  padding-top: 20px;
+  border-top: 1px solid #e2e8f0;
+}
+
+.demo-info details {
+  cursor: pointer;
+}
+
+.demo-info summary {
+  color: #718096;
+  font-size: 0.9rem;
+  font-weight: 600;
+  outline: none;
+}
+
+.demo-info summary:hover {
+  color: #4a5568;
+}
+
+.demo-content {
+  margin-top: 10px;
+  padding: 15px;
+  background: #f7fafc;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  color: #4a5568;
+}
+
+.demo-content strong {
+  color: #2d3748;
+}
+
+.demo-content ul {
+  margin: 10px 0 0 0;
+  padding-left: 20px;
+}
+
+.demo-content li {
+  margin-bottom: 5px;
+  line-height: 1.4;
+}
+
+/* Responsive Design */
+@media (max-width: 600px) {
+  .email-confirmation-container {
+    padding: 10px;
+  }
+
+  .email-confirmation-card {
+    padding: 25px 20px;
+  }
+
+  .confirmation-header h2 {
+    font-size: 1.5rem;
+  }
+
+  .token-input-group {
+    flex-direction: column;
+  }
+
+  .confirm-token-btn {
+    width: 100%;
+  }
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  .email-confirmation-card {
+    background: #2d3748;
+    color: #e2e8f0;
+  }
+
+  .confirmation-header h2 {
+    color: #e2e8f0;
+  }
+
+  .confirmation-instructions {
+    color: #cbd5e0;
+  }
+
+  .confirmation-email {
+    color: #e2e8f0;
+    background: #4a5568;
+    border-color: #718096;
+  }
+
+  .token-input {
+    background: #4a5568;
+    border-color: #718096;
+    color: #e2e8f0;
+  }
+
+  .token-input::placeholder {
+    color: #a0aec0;
+  }
+
+  .token-input:focus {
+    border-color: #4299e1;
+  }
+}

@@ -1,0 +1,257 @@
+.certificate-award {
+  background: white;
+  border-radius: 15px;
+  max-width: 600px;
+  width: 100%;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  overflow: hidden;
+}
+
+.award-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 25px 30px;
+  background: linear-gradient(135deg, #2c3e50, #34495e);
+  color: white;
+}
+
+.award-header h2 {
+  margin: 0;
+  font-size: 1.5rem;
+}
+
+.award-content {
+  padding: 30px;
+}
+
+/* Eligible Section */
+.eligible-section {
+  text-align: center;
+}
+
+.success-message {
+  background: linear-gradient(135deg, #d5f4e6, #e8f8f1);
+  padding: 30px;
+  border-radius: 10px;
+  border-left: 5px solid #27ae60;
+  margin-bottom: 30px;
+}
+
+.success-icon {
+  font-size: 4rem;
+  margin-bottom: 15px;
+}
+
+.success-message h3 {
+  color: #27ae60;
+  margin-bottom: 10px;
+  font-size: 1.8rem;
+}
+
+.course-info {
+  background: #f8f9fa;
+  padding: 20px;
+  border-radius: 8px;
+  margin-bottom: 25px;
+}
+
+.course-info h4 {
+  color: #2c3e50;
+  margin-bottom: 10px;
+  font-size: 1.3rem;
+}
+
+.generate-cert-btn {
+  background: linear-gradient(135deg, #e67e22, #d35400);
+  color: white;
+  border: none;
+  padding: 15px 30px;
+  border-radius: 8px;
+  font-size: 1.2rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-bottom: 30px;
+}
+
+.generate-cert-btn:hover {
+  background: linear-gradient(135deg, #d35400, #ba4a00);
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(230, 126, 34, 0.3);
+}
+
+.certificate-benefits {
+  text-align: left;
+  background: #f8f9fa;
+  padding: 20px;
+  border-radius: 8px;
+}
+
+.certificate-benefits h4 {
+  color: #2c3e50;
+  margin-bottom: 15px;
+  text-align: center;
+}
+
+.certificate-benefits ul {
+  list-style: none;
+  padding: 0;
+}
+
+.certificate-benefits li {
+  padding: 8px 0;
+  color: #555;
+}
+
+/* Already Issued */
+.already-issued {
+  text-align: center;
+  padding: 30px;
+}
+
+.issued-icon {
+  font-size: 4rem;
+  margin-bottom: 15px;
+}
+
+.already-issued h3 {
+  color: #27ae60;
+  margin-bottom: 10px;
+}
+
+.certificate-preview {
+  background: #f8f9fa;
+  padding: 20px;
+  border-radius: 8px;
+  margin: 20px 0;
+  border-left: 4px solid #3498db;
+}
+
+.view-cert-btn {
+  background: linear-gradient(135deg, #3498db, #2980b9);
+  color: white;
+  border: none;
+  padding: 12px 25px;
+  border-radius: 8px;
+  font-size: 1.1rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.view-cert-btn:hover {
+  background: linear-gradient(135deg, #2980b9, #21618c);
+  transform: translateY(-2px);
+}
+
+/* Not Eligible */
+.not-eligible {
+  text-align: center;
+  padding: 30px;
+}
+
+.warning-icon {
+  font-size: 4rem;
+  margin-bottom: 15px;
+}
+
+.not-eligible h3 {
+  color: #e74c3c;
+  margin-bottom: 10px;
+}
+
+.progress-info {
+  background: #f8f9fa;
+  padding: 20px;
+  border-radius: 8px;
+  margin: 20px 0;
+}
+
+.progress-bar {
+  width: 100%;
+  height: 20px;
+  background: #e9ecef;
+  border-radius: 10px;
+  margin-top: 10px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #3498db, #2ecc71);
+  transition: width 0.5s ease;
+}
+
+.encouragement {
+  color: #7f8c8d;
+  font-style: italic;
+  margin: 20px 0;
+}
+
+.continue-learning-btn {
+  background: #3498db;
+  color: white;
+  border: none;
+  padding: 12px 25px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: background-color 0.3s;
+}
+
+.continue-learning-btn:hover {
+  background: #2980b9;
+}
+
+/* Loading */
+.loading-certificate {
+  text-align: center;
+  padding: 40px;
+}
+
+.loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid #e9ecef;
+  border-top: 4px solid #3498db;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 20px auto;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .certificate-award {
+    margin: 10px;
+  }
+  
+  .award-header {
+    padding: 20px;
+  }
+  
+  .award-header h2 {
+    font-size: 1.3rem;
+  }
+  
+  .award-content {
+    padding: 20px;
+  }
+  
+  .success-message {
+    padding: 20px;
+  }
+  
+  .success-icon {
+    font-size: 3rem;
+  }
+  
+  .generate-cert-btn {
+    padding: 12px 20px;
+    font-size: 1.1rem;
+  }
+}
