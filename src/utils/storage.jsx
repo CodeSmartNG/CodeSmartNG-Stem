@@ -16,60 +16,30 @@ export const initializeStorage = () => {
 
 
 
-// Basic storage functions (should already exist)
+
+const STUDENT_KEY = 'students';
+
 export const getStudents = () => {
   try {
     const students = localStorage.getItem(STUDENT_KEY);
     return students ? JSON.parse(students) : [];
-  } catch (error) {
-    console.error('Error loading students:', error);
+  } catch (err) {
+    console.error('getStudents error', err);
     return [];
   }
 };
 
-export const saveStudents = (students) => {
+export const setStudents = (students) => {
   try {
     localStorage.setItem(STUDENT_KEY, JSON.stringify(students));
-  } catch (error) {
-    console.error('Error saving students:', error);
-  }
-};
-
-export const getUsers = () => {
-  try {
-    const users = localStorage.getItem(USERS_KEY);
-    return users ? JSON.parse(users) : {};
-  } catch (error) {
-    console.error('Error loading users:', error);
-    return {};
-  }
-};
-
-export const saveUsers = (users) => {
-  try {
-    localStorage.setItem(USERS_KEY, JSON.stringify(users));
-  } catch (error) {
-    console.error('Error saving users:', error);
-  }
-};
-
-export const getCourses = () => {
-  try {
-    const courses = localStorage.getItem(COURSES_KEY);
-    return courses ? JSON.parse(courses) : {};
-  } catch (error) {
-    console.error('Error loading courses:', error);
-    return {};
+  } catch (err) {
+    console.error('setStudents error', err);
   }
 };
 
 
 
-
-
-
-
-
+  
   
 
   console.log('🔄 Initializing Storage...');
