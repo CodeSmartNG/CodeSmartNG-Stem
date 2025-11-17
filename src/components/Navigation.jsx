@@ -35,6 +35,19 @@ const Navigation = ({ currentView, setCurrentView, currentUser, onLogout, isAdmi
           {/* Center: General Navigation Links */}
           <nav className={`general-nav ${isMobileMenuOpen ? 'mobile-open' : ''}`}>
             {/* Converted to buttons with onClick handlers */}
+
+
+
+            {isStudent && (
+  <button 
+    onClick={() => setCurrentView('my-courses')}
+    className={currentView === 'my-courses' ? 'active' : ''}
+  >
+    My Courses
+  </button>
+)}
+
+            
             <button 
               className="nav-link"
               onClick={() => handleNavClick('about')}
