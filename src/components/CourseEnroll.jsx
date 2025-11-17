@@ -1,10 +1,12 @@
+
 import React, { useState, useEffect } from 'react';
 import { 
   getCourses, 
   enrollStudentInCourse, 
   unenrollStudentFromCourse,
   getStudentById,
-  updateStudentProgress 
+  getEnrolledCoursesWithProgress, // Add this import
+  getCurrentUser // Add this import
 } from '../utils/storage';
 import './CourseEnroll.css';
 
@@ -24,31 +26,25 @@ const CourseEnroll = ({ student, setStudent }) => {
       const allCourses = getCourses();
       setCourses(allCourses);
       
-      // Get enrolled courses with progress
-      const enrolled = Object.keys(allCourses).filter(courseKey => 
-        student.enrolledCourses?.includes(courseKey)
-      ).map(courseKey => ({
-        key: courseKey,
-        ...allCourses[courseKey],
-        progress: student.progress?.[courseKey] || 0,
-        isCompleted: student.completedCourses?.includes(courseKey) || false
-      }));
-      
+      // Use the fixed function to get enrolled courses
+      const enrolled = getEnrolledCoursesWithProgress(student.id);
       setEnrolledCourses(enrolled);
       
       // Get available courses (not enrolled)
-      const available = Object.keys(allCourses).filter(courseKey => 
-        !student.enrolledCourses?.includes(courseKey)
-      ).map(courseKey => ({
-        key: courseKey,
-        ...allCourses[courseKey]
-      }));
+      const available = Object.keys(allCourses)
+        .filter(courseKey => 
+          !student.enrolledCourses?.includes(courseKey)
+        )
+        .map(courseKey => ({
+          key: courseKey,
+          ...allCourses[courseKey]
+        }));
       
       setAvailableCourses(available);
       setLoading(false);
     } catch (error) {
       console.error('Error loading courses:', error);
-      setMessage('Error loading courses');
+      setMessage('Error loading courses. Please refresh the page.');
       setLoading(false);
     }
   };
@@ -59,47 +55,75 @@ const CourseEnroll = ({ student, setStudent }) => {
       const success = enrollStudentInCourse(student.id, courseKey);
       
       if (success) {
-        // Update local student state
-        const updatedStudent = getStudentById(student.id);
-        setStudent(updatedStudent);
-        setMessage(`Successfully enrolled in ${courses[courseKey].title}`);
-        loadCourses(); // Refresh the course lists
-      } else {
-        setMessage('Failed to enroll in course');
+        // Update local student state - get from both systems
+        const updatedStudent = getStudentById(student.id) || getCurrentUser();
+        if (updatedStudent) {
+          setStudent(updatedStudent);
+        }
+        
+        setMessage(`✅ Successfully enrolled in "${courses[courseKey]?.title}"`);
+        
+        // Reload courses after a short delay
+        setTimeout(() => {
+          loadCourses();
+        }, 500);
       }
     } catch (error) {
       console.error('Enrollment error:', error);
-      setMessage(error.message || 'Error enrolling in course');
+      setMessage(`❌ ${error.message || 'Error enrolling in course'}`);
     }
   };
 
   const handleUnenroll = async (courseKey) => {
     try {
       setMessage('');
+      
+      if (!window.confirm(`Are you sure you want to unenroll from "${courses[courseKey]?.title}"?`)) {
+        return;
+      }
+      
       const success = unenrollStudentFromCourse(student.id, courseKey);
       
       if (success) {
         // Update local student state
-        const updatedStudent = getStudentById(student.id);
-        setStudent(updatedStudent);
-        setMessage(`Unenrolled from ${courses[courseKey].title}`);
-        loadCourses(); // Refresh the course lists
-      } else {
-        setMessage('Failed to unenroll from course');
+        const updatedStudent = getStudentById(student.id) || getCurrentUser();
+        if (updatedStudent) {
+          setStudent(updatedStudent);
+        }
+        
+        setMessage(`✅ Unenrolled from "${courses[courseKey]?.title}"`);
+        
+        // Reload courses after a short delay
+        setTimeout(() => {
+          loadCourses();
+        }, 500);
       }
     } catch (error) {
       console.error('Unenrollment error:', error);
-      setMessage(error.message || 'Error unenrolling from course');
+      setMessage(`❌ ${error.message || 'Error unenrolling from course'}`);
     }
   };
 
   const handleContinueLearning = (courseKey) => {
     // This would navigate to the course player
-    // For now, we'll just show a message
-    setMessage(`Continuing with ${courses[courseKey].title}`);
-    // In a full implementation, you would navigate to:
-    // setCurrentView('course-player');
-    // setSelectedCourse(courseKey);
+    setMessage(`🎯 Continuing with "${courses[courseKey]?.title}"`);
+    
+    // In a full implementation, you would navigate to the course:
+    // window.location.href = `/course/${courseKey}`;
+    // or use your routing system:
+    // navigate(`/course/${courseKey}`);
+  };
+
+  // Add this function to sync student data
+  const syncStudentData = () => {
+    try {
+      const currentUser = getCurrentUser();
+      if (currentUser && currentUser.id === student.id) {
+        setStudent(currentUser);
+      }
+    } catch (error) {
+      console.error('Error syncing student data:', error);
+    }
   };
 
   const getProgressColor = (progress) => {
@@ -126,6 +150,14 @@ const CourseEnroll = ({ student, setStudent }) => {
     );
   };
 
+  // Add a refresh button handler
+  const handleRefresh = () => {
+    setLoading(true);
+    setMessage('');
+    loadCourses();
+    syncStudentData();
+  };
+
   if (loading) {
     return (
       <div className="course-enroll-loading">
@@ -138,25 +170,52 @@ const CourseEnroll = ({ student, setStudent }) => {
   return (
     <div className="course-enroll-container">
       <div className="course-enroll-header">
-        <h1>My Learning Dashboard</h1>
+        <div className="header-top">
+          <h1>My Learning Dashboard</h1>
+          <button 
+            className="refresh-btn"
+            onClick={handleRefresh}
+            title="Refresh courses"
+          >
+            🔄 Refresh
+          </button>
+        </div>
         <p>Manage your enrolled courses and discover new ones</p>
+        
+        {/* Student Info */}
+        <div className="student-info-card">
+          <div className="student-avatar">
+            {student.name?.charAt(0) || 'S'}
+          </div>
+          <div className="student-details">
+            <h3>{student.name || 'Student'}</h3>
+            <p>Level: {student.level || 'Beginner'} • Points: {student.points || 0}</p>
+          </div>
+        </div>
       </div>
 
       {message && (
-        <div className={`message ${message.includes('Successfully') || message.includes('Continuing') ? 'success' : 'error'}`}>
+        <div className={`message ${message.includes('✅') || message.includes('🎯') ? 'success' : 'error'}`}>
           {message}
         </div>
       )}
 
       {/* Enrolled Courses Section */}
       <section className="enrolled-courses-section">
-        <h2>My Enrolled Courses ({enrolledCourses.length})</h2>
+        <div className="section-header">
+          <h2>My Enrolled Courses ({enrolledCourses.length})</h2>
+          {enrolledCourses.length > 0 && (
+            <div className="progress-summary">
+              Overall Progress: {Math.round(enrolledCourses.reduce((acc, course) => acc + (course.progress || 0), 0) / enrolledCourses.length) || 0}%
+            </div>
+          )}
+        </div>
         
         {enrolledCourses.length === 0 ? (
           <div className="empty-state">
             <div className="empty-icon">📚</div>
             <h3>No courses enrolled yet</h3>
-            <p>Browse available courses below to start learning!</p>
+            <p>Browse available courses below to start your learning journey!</p>
           </div>
         ) : (
           <div className="enrolled-courses-grid">
@@ -178,15 +237,15 @@ const CourseEnroll = ({ student, setStudent }) => {
                 
                 <div className="progress-section">
                   <div className="progress-header">
-                    <span>Progress</span>
-                    <span className="progress-percent">{course.progress}%</span>
+                    <span>Your Progress</span>
+                    <span className="progress-percent">{course.progress || 0}%</span>
                   </div>
                   <div className="progress-bar">
                     <div 
                       className="progress-fill"
                       style={{ 
-                        width: `${course.progress}%`,
-                        backgroundColor: getProgressColor(course.progress)
+                        width: `${course.progress || 0}%`,
+                        backgroundColor: getProgressColor(course.progress || 0)
                       }}
                     ></div>
                   </div>
@@ -198,17 +257,16 @@ const CourseEnroll = ({ student, setStudent }) => {
                 
                 <div className="course-actions">
                   <button 
-                    className="continue-btn"
+                    className={`continue-btn ${course.isCompleted ? 'completed' : ''}`}
                     onClick={() => handleContinueLearning(course.key)}
-                    disabled={course.isCompleted}
                   >
-                    {course.isCompleted ? 'Completed' : 'Continue Learning'}
+                    {course.isCompleted ? '🎓 Completed' : '➤ Continue Learning'}
                   </button>
                   <button 
                     className="unenroll-btn"
                     onClick={() => handleUnenroll(course.key)}
                   >
-                    Unenroll
+                    🗑️ Unenroll
                   </button>
                 </div>
               </div>
@@ -225,7 +283,7 @@ const CourseEnroll = ({ student, setStudent }) => {
           <div className="empty-state">
             <div className="empty-icon">🎉</div>
             <h3>You're enrolled in all available courses!</h3>
-            <p>Check back later for new courses.</p>
+            <p>Check back later for new courses or contact your teacher.</p>
           </div>
         ) : (
           <div className="available-courses-grid">
@@ -240,15 +298,15 @@ const CourseEnroll = ({ student, setStudent }) => {
                   
                   <div className="course-details">
                     <div className="detail-item">
-                      <span className="detail-label">Teacher:</span>
+                      <span className="detail-label">👨‍🏫 Teacher:</span>
                       <span className="detail-value">{course.teacherName}</span>
                     </div>
                     <div className="detail-item">
-                      <span className="detail-label">Lessons:</span>
+                      <span className="detail-label">📚 Lessons:</span>
                       <span className="detail-value">{course.lessons?.length || 0}</span>
                     </div>
                     <div className="detail-item">
-                      <span className="detail-label">Level:</span>
+                      <span className="detail-label">🎯 Level:</span>
                       <span className="detail-value">
                         {getDifficultyBadge(course.difficulty)}
                       </span>
@@ -259,7 +317,7 @@ const CourseEnroll = ({ student, setStudent }) => {
                     className="enroll-btn"
                     onClick={() => handleEnroll(course.key)}
                   >
-                    Enroll Now
+                    📝 Enroll Now
                   </button>
                 </div>
               </div>
