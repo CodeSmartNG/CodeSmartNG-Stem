@@ -236,6 +236,179 @@ export const initializeStorage = () => {
   debugStorage(); // Show final state
 };
 
+
+
+
+// ==================== COURSE ENROLLMENT FUNCTIONS ====================
+export const enrollStudentInCourse = (studentId, courseKey) => {
+  const student = getStudentById(studentId);
+  const courses = getCourses();
+  
+  if (!student) {
+    throw new Error('Student not found');
+  }
+  
+  if (!courses[courseKey]) {
+    throw new Error('Course not found');
+  }
+  
+  // Check if already enrolled
+  if (student.enrolledCourses?.includes(courseKey)) {
+    throw new Error('Already enrolled in this course');
+  }
+  
+  // Initialize enrolled courses array if it doesn't exist
+  if (!student.enrolledCourses) {
+    student.enrolledCourses = [];
+  }
+  
+  // Initialize progress tracking if it doesn't exist
+  if (!student.progress) {
+    student.progress = {};
+  }
+  
+  // Add course to enrolled courses
+  student.enrolledCourses.push(courseKey);
+  
+  // Initialize progress for this course
+  student.progress[courseKey] = 0;
+  
+  // Initialize enrolled courses date tracking
+  if (!student.enrolledCoursesDate) {
+    student.enrolledCoursesDate = {};
+  }
+  student.enrolledCoursesDate[courseKey] = new Date().toISOString();
+  
+  // Update student
+  updateStudent(student);
+  
+  console.log(`✅ Student ${studentId} enrolled in course: ${courseKey}`);
+  return true;
+};
+
+export const unenrollStudentFromCourse = (studentId, courseKey) => {
+  const student = getStudentById(studentId);
+  
+  if (!student) {
+    throw new Error('Student not found');
+  }
+  
+  // Check if enrolled
+  if (!student.enrolledCourses?.includes(courseKey)) {
+    throw new Error('Not enrolled in this course');
+  }
+  
+  // Remove course from enrolled courses
+  student.enrolledCourses = student.enrolledCourses.filter(course => course !== courseKey);
+  
+  // Remove progress tracking for this course
+  if (student.progress && student.progress[courseKey]) {
+    delete student.progress[courseKey];
+  }
+  
+  // Remove from completed courses if present
+  if (student.completedCourses?.includes(courseKey)) {
+    student.completedCourses = student.completedCourses.filter(course => course !== courseKey);
+  }
+  
+  // Remove enrollment date
+  if (student.enrolledCoursesDate && student.enrolledCoursesDate[courseKey]) {
+    delete student.enrolledCoursesDate[courseKey];
+  }
+  
+  // Update student
+  updateStudent(student);
+  
+  console.log(`❌ Student ${studentId} unenrolled from course: ${courseKey}`);
+  return true;
+};
+
+export const getEnrolledCoursesWithProgress = (studentId) => {
+  const student = getStudentById(studentId);
+  const courses = getCourses();
+  
+  if (!student || !student.enrolledCourses) {
+    return [];
+  }
+  
+  return student.enrolledCourses.map(courseKey => {
+    const course = courses[courseKey];
+    return {
+      key: courseKey,
+      ...course,
+      progress: student.progress?.[courseKey] || 0,
+      isCompleted: student.completedCourses?.includes(courseKey) || false,
+      enrolledDate: student.enrolledCoursesDate?.[courseKey] || student.joinedDate
+    };
+  }).filter(course => course !== null); // Filter out any null courses
+};
+
+export const updateCourseProgress = (studentId, courseKey, progress) => {
+  const student = getStudentById(studentId);
+  
+  if (!student) {
+    throw new Error('Student not found');
+  }
+  
+  if (!student.enrolledCourses?.includes(courseKey)) {
+    throw new Error('Not enrolled in this course');
+  }
+  
+  // Initialize progress tracking if it doesn't exist
+  if (!student.progress) {
+    student.progress = {};
+  }
+  
+  // Update progress
+  student.progress[courseKey] = Math.min(100, Math.max(0, progress));
+  
+  // Check if course is completed
+  if (progress >= 100) {
+    if (!student.completedCourses) {
+      student.completedCourses = [];
+    }
+    if (!student.completedCourses.includes(courseKey)) {
+      student.completedCourses.push(courseKey);
+      
+      // Award points for course completion
+      student.points = (student.points || 0) + 100;
+      
+      // Add completion badge if not already present
+      if (!student.badges) {
+        student.badges = [];
+      }
+      if (!student.badges.includes('Course Completer')) {
+        student.badges.push('Course Completer');
+      }
+    }
+  }
+  
+  updateStudent(student);
+  return student.progress[courseKey];
+};
+
+export const getCourseCompletionStatus = (studentId, courseKey) => {
+  const student = getStudentById(studentId);
+  
+  if (!student) {
+    return { enrolled: false, progress: 0, completed: false };
+  }
+  
+  return {
+    enrolled: student.enrolledCourses?.includes(courseKey) || false,
+    progress: student.progress?.[courseKey] || 0,
+    completed: student.completedCourses?.includes(courseKey) || false
+  };
+};
+
+
+
+
+
+
+
+
+
 // ==================== EMAIL CONFIRMATION MANAGEMENT ====================
 export const getEmailConfirmations = () => {
   try {
@@ -246,6 +419,8 @@ export const getEmailConfirmations = () => {
     return {};
   }
 };
+
+
 
 export const saveEmailConfirmations = (confirmations) => {
   try {
