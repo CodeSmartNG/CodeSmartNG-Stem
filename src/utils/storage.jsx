@@ -17,26 +17,182 @@ export const initializeStorage = () => {
 
 
 
-const STUDENT_KEY = 'students';
 
-export const getStudents = () => {
-  try {
-    const students = localStorage.getItem(STUDENT_KEY);
-    return students ? JSON.parse(students) : [];
-  } catch (err) {
-    console.error('getStudents error', err);
+
+  // ==================== CRITICAL STUDENT FUNCTIONS - ADD THESE ====================
+
+// Fix: Enhanced getStudentById to check both systems
+export const getStudentById = (id) => {
+  const users = getUsers();
+  const students = getStudents();
+  
+  console.log('🔍 Looking for student:', id);
+  
+  // First check in users system
+  if (users[id] && users[id].role === 'student') {
+    console.log('✅ Found student in users system:', id);
+    return users[id];
+  }
+  
+  // Then check in students array
+  const studentFromArray = students.find(student => 
+    student.id == id || student.userId === id
+  );
+  
+  if (studentFromArray) {
+    console.log('✅ Found student in students array:', id);
+    return studentFromArray;
+  }
+  
+  console.log('❌ Student not found in any system:', id);
+  return null;
+};
+
+// Fix: Enhanced updateStudent to update both systems
+export const updateStudent = (updatedStudent) => {
+  const users = getUsers();
+  const students = getStudents();
+  
+  let updated = false;
+  
+  // Update in users system
+  if (users[updatedStudent.id]) {
+    users[updatedStudent.id] = {
+      ...users[updatedStudent.id],
+      ...updatedStudent
+    };
+    saveUsers(users);
+    updated = true;
+    console.log('✅ Updated student in users system:', updatedStudent.id);
+  }
+  
+  // Update in students array
+  const studentIndex = students.findIndex(student => 
+    student.id === updatedStudent.id || student.userId === updatedStudent.id
+  );
+  
+  if (studentIndex !== -1) {
+    students[studentIndex] = {
+      ...students[studentIndex],
+      ...updatedStudent
+    };
+    saveStudents(students);
+    updated = true;
+    console.log('✅ Updated student in students array:', updatedStudent.id);
+  }
+  
+  if (!updated) {
+    console.log('⚠️ Student not found in any system for update:', updatedStudent.id);
+  }
+  
+  return updatedStudent;
+};
+
+// Fix: Enhanced enroll function that works with both systems
+export const enrollStudentInCourse = (studentId, courseKey) => {
+  const student = getStudentById(studentId);
+  const courses = getCourses();
+  
+  console.log('🎓 Enrollment attempt:', { studentId, courseKey });
+  
+  if (!student) {
+    throw new Error('Student not found. Please log in again.');
+  }
+  
+  if (!courses[courseKey]) {
+    throw new Error('Course not found');
+  }
+  
+  // Check if already enrolled
+  if (student.enrolledCourses?.includes(courseKey)) {
+    throw new Error('Already enrolled in this course');
+  }
+  
+  // Update student data
+  const updatedStudent = {
+    ...student,
+    enrolledCourses: [...(student.enrolledCourses || []), courseKey],
+    progress: {
+      ...(student.progress || {}),
+      [courseKey]: 0
+    },
+    enrolledCoursesDate: {
+      ...(student.enrolledCoursesDate || {}),
+      [courseKey]: new Date().toISOString()
+    }
+  };
+  
+  // Update in both systems
+  updateStudent(updatedStudent);
+  
+  console.log('✅ Enrollment successful');
+  return true;
+};
+
+// Fix: Enhanced getEnrolledCoursesWithProgress
+export const getEnrolledCoursesWithProgress = (studentId) => {
+  const student = getStudentById(studentId);
+  const courses = getCourses();
+  
+  console.log('🔍 Getting enrolled courses for:', studentId);
+  
+  if (!student) {
+    console.log('❌ Student not found:', studentId);
     return [];
   }
-};
-
-export const setStudents = (students) => {
-  try {
-    localStorage.setItem(STUDENT_KEY, JSON.stringify(students));
-  } catch (err) {
-    console.error('setStudents error', err);
+  
+  if (!student.enrolledCourses || student.enrolledCourses.length === 0) {
+    console.log('📝 No enrolled courses for student:', studentId);
+    return [];
   }
+  
+  console.log('📚 Enrolled course keys:', student.enrolledCourses);
+  
+  const enrolledCourses = student.enrolledCourses.map(courseKey => {
+    const course = courses[courseKey];
+    if (!course) {
+      console.log('❌ Course not found:', courseKey);
+      return null;
+    }
+    
+    const courseData = {
+      key: courseKey,
+      ...course,
+      progress: student.progress?.[courseKey] || 0,
+      isCompleted: student.completedCourses?.includes(courseKey) || false,
+      enrolledDate: student.enrolledCoursesDate?.[courseKey] || student.joinedDate
+    };
+    
+    console.log('✅ Course data loaded:', courseKey);
+    return courseData;
+  }).filter(course => course !== null);
+  
+  console.log('🎯 Final enrolled courses:', enrolledCourses.length);
+  return enrolledCourses;
 };
 
+// Test function to debug the system
+export const testStudentSystem = () => {
+  console.log('=== 🧪 TESTING STUDENT SYSTEM ===');
+  
+  const currentUser = getCurrentUser();
+  console.log('Current User:', currentUser);
+  
+  if (currentUser) {
+    const student = getStudentById(currentUser.id);
+    console.log('Student Data:', student);
+    
+    const enrolledCourses = getEnrolledCoursesWithProgress(currentUser.id);
+    console.log('Enrolled Courses:', enrolledCourses);
+    
+    const allCourses = getCourses();
+    console.log('All Courses:', Object.keys(allCourses));
+  } else {
+    console.log('❌ No user logged in');
+  }
+  
+  console.log('=== TEST COMPLETE ===');
+};
 
 
   
