@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import './App.css';
 import StudentProfile from './components/StudentProfile';
 import CourseCatalog from './components/CourseCatalog';
+import CourseEnroll from './components/CourseEnroll'; // Add this import
 import Navigation from './components/Navigation';
 import Dashboard from './pages/Dashboard';
 import LoginForm from './components/LoginForm';
@@ -44,6 +45,52 @@ function App() {
   const [pendingUser, setPendingUser] = useState(null);
   const [confirmationToken, setConfirmationToken] = useState('');
   const [showConfirmationInfo, setShowConfirmationInfo] = useState(false);
+  const [showInactivityWarning, setShowInactivityWarning] = useState(false);
+  
+  // Refs for timer management
+  const logoutTimerRef = useRef(null);
+  const warningTimerRef = useRef(null);
+  const events = ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart', 'click'];
+
+  // Auto-logout handler
+  const handleAutoLogout = useCallback(() => {
+    setMessage('You have been automatically logged out due to inactivity.');
+    handleLogout();
+  }, []);
+
+  // Reset inactivity timer
+  const resetInactivityTimer = useCallback(() => {
+    // Clear existing timers
+    if (logoutTimerRef.current) {
+      clearTimeout(logoutTimerRef.current);
+    }
+    if (warningTimerRef.current) {
+      clearTimeout(warningTimerRef.current);
+    }
+    
+    // Only set timers if user is logged in
+    if (currentUser) {
+      // Show warning after 55 minutes (5 minutes before logout)
+      warningTimerRef.current = setTimeout(() => {
+        setShowInactivityWarning(true);
+      }, 55 * 60 * 1000); // 55 minutes
+      
+      // Auto logout after 60 minutes
+      logoutTimerRef.current = setTimeout(() => {
+        handleAutoLogout();
+      }, 60 * 60 * 1000); // 60 minutes
+    }
+  }, [currentUser, handleAutoLogout]);
+
+  // Handle user activity
+  const handleUserActivity = useCallback(() => {
+    if (currentUser) {
+      resetInactivityTimer();
+      if (showInactivityWarning) {
+        setShowInactivityWarning(false);
+      }
+    }
+  }, [currentUser, resetInactivityTimer, showInactivityWarning]);
 
   // Initialize storage and load data
   useEffect(() => {
@@ -83,6 +130,32 @@ function App() {
     initApp();
   }, []);
 
+  // Set up activity listeners when user is logged in
+  useEffect(() => {
+    if (currentUser) {
+      // Add event listeners for user activity
+      events.forEach(event => {
+        document.addEventListener(event, handleUserActivity);
+      });
+      
+      // Start the inactivity timer
+      resetInactivityTimer();
+      
+      // Cleanup function
+      return () => {
+        events.forEach(event => {
+          document.removeEventListener(event, handleUserActivity);
+        });
+        if (logoutTimerRef.current) {
+          clearTimeout(logoutTimerRef.current);
+        }
+        if (warningTimerRef.current) {
+          clearTimeout(warningTimerRef.current);
+        }
+      };
+    }
+  }, [currentUser, handleUserActivity, resetInactivityTimer]);
+
   // Check for confirmation token in URL (for email confirmation links)
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
@@ -99,6 +172,9 @@ function App() {
         const { password: _, ...userWithoutPassword } = user;
         setCurrentUserState(userWithoutPassword);
         setCurrentUser(userWithoutPassword);
+        
+        // Reset inactivity timer on login
+        resetInactivityTimer();
         
         // Redirect based on role
         if (user.role === 'admin') {
@@ -219,12 +295,21 @@ function App() {
   };
 
   const handleLogout = () => {
+    // Clear all timers
+    if (logoutTimerRef.current) {
+      clearTimeout(logoutTimerRef.current);
+    }
+    if (warningTimerRef.current) {
+      clearTimeout(warningTimerRef.current);
+    }
+    
     logoutUser();
     setCurrentUserState(null);
     setCurrentUser(null);
     setCurrentView('login');
     setMessage('');
     setShowConfirmationInfo(false);
+    setShowInactivityWarning(false);
   };
 
   const updateStudentData = (updatedStudent) => {
@@ -262,6 +347,42 @@ function App() {
     } catch (error) {
       console.error('Error updating user:', error);
     }
+  };
+
+  // Inactivity Warning Modal Component
+  const InactivityWarning = () => {
+    if (!showInactivityWarning) return null;
+
+    return (
+      <div className="inactivity-warning-overlay">
+        <div className="inactivity-warning-modal">
+          <div className="warning-header">
+            <h3>Session Timeout Warning</h3>
+          </div>
+          <div className="warning-body">
+            <p>Your session will expire in 5 minutes due to inactivity.</p>
+            <p>Would you like to continue your session?</p>
+          </div>
+          <div className="warning-actions">
+            <button 
+              className="continue-btn"
+              onClick={() => {
+                resetInactivityTimer();
+                setShowInactivityWarning(false);
+              }}
+            >
+              Continue Session
+            </button>
+            <button 
+              className="logout-btn"
+              onClick={handleLogout}
+            >
+              Log Out Now
+            </button>
+          </div>
+        </div>
+      </div>
+    );
   };
 
   // Demo confirmation info display
@@ -317,6 +438,24 @@ function App() {
               />
             </>
           );
+        case 'teacher-register':
+          return (
+            <>
+              <MessageDisplay />
+              <ConfirmationInfoDisplay />
+              <TeacherRegisterForm 
+                onRegister={handleTeacherRegister} 
+                onSwitchToLogin={() => {
+                  setMessage('');
+                  setCurrentView('login');
+                }}
+                onSwitchToStudentRegister={() => {
+                  setMessage('');
+                  setCurrentView('register');
+                }}
+              />
+            </>
+          );
         case 'email-confirmation':
           return (
             <>
@@ -348,6 +487,10 @@ function App() {
                   setMessage('');
                   setCurrentView('register');
                 }} 
+                onSwitchToTeacherRegister={() => {
+                  setMessage('');
+                  setCurrentView('teacher-register');
+                }}
               />
             </div>
           );
@@ -382,6 +525,23 @@ function App() {
         );
       case 'support':
         return <Support />;
+      case 'my-courses': // Add this case for CourseEnroll
+        if (isStudent) {
+          return <CourseEnroll student={currentUser} setStudent={updateStudentData} />;
+        } else {
+          return (
+            <div className="access-denied">
+              <h2>Access Denied</h2>
+              <p>You don't have permission to access course enrollment.</p>
+              <button 
+                className="back-button"
+                onClick={() => setCurrentView(isAdmin ? 'admin' : 'dashboard')}
+              >
+                Back to Dashboard
+              </button>
+            </div>
+          );
+        }
       case 'admin-courses':
         if (isAdmin) {
           return <AdminCourseManagement currentUser={currentUser} />;
@@ -519,6 +679,9 @@ function App() {
 
   return (
     <div className="App">
+      {/* Inactivity Warning Modal */}
+      <InactivityWarning />
+      
       {currentUser && (
         <Navigation 
           currentView={currentView} 
