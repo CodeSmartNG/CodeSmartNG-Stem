@@ -5,6 +5,9 @@ const Navigation = ({ currentView, setCurrentView, currentUser, onLogout, isAdmi
   const [showMoreLinks, setShowMoreLinks] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
+  // Check if user is student
+  const isStudent = currentUser?.role === 'student';
+
   // Handle navigation clicks
   const handleNavClick = (view) => {
     setCurrentView(view);
@@ -34,34 +37,30 @@ const Navigation = ({ currentView, setCurrentView, currentUser, onLogout, isAdmi
 
           {/* Center: General Navigation Links */}
           <nav className={`general-nav ${isMobileMenuOpen ? 'mobile-open' : ''}`}>
-            {/* Converted to buttons with onClick handlers */}
-
-
-
+            {/* Student-specific navigation */}
             {isStudent && (
-  <button 
-    onClick={() => setCurrentView('my-courses')}
-    className={currentView === 'my-courses' ? 'active' : ''}
-  >
-    My Courses
-  </button>
-)}
-
+              <button 
+                className={`nav-link ${currentView === 'my-courses' ? 'active' : ''}`}
+                onClick={() => handleNavClick('my-courses')}
+              >
+                My Courses
+              </button>
+            )}
             
             <button 
-              className="nav-link"
+              className={`nav-link ${currentView === 'about' ? 'active' : ''}`}
               onClick={() => handleNavClick('about')}
             >
               About
             </button>
             <button 
-              className="nav-link"
+              className={`nav-link ${currentView === 'faqs' ? 'active' : ''}`}
               onClick={() => handleNavClick('faqs')}
             >
               FAQs
             </button>
             <button 
-              className="nav-link"
+              className={`nav-link ${currentView === 'contact' ? 'active' : ''}`}
               onClick={() => handleNavClick('contact')}
             >
               Contact
@@ -110,17 +109,17 @@ const Navigation = ({ currentView, setCurrentView, currentUser, onLogout, isAdmi
               <span className="welcome-text">Welcome, {currentUser?.name}</span>
               <span className="user-role">({currentUser?.role})</span>
             
-<div className="user-info">
-  <span className="user-role">{currentUser?.role}</span>
-  <a 
-    href="https://wa.me/0802 1025168" // Replace with actual WhatsApp number
-    target="_blank" 
-    rel="noopener noreferrer"
-    className="help-btn"
-  >
-    Help viaw WhatsApp
-  </a>
-</div>
+              <div className="user-info">
+                <span className="user-role">{currentUser?.role}</span>
+                <a 
+                  href="https://wa.me/08021025168" // Fixed the phone number format
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="help-btn"
+                >
+                  Help via WhatsApp
+                </a>
+              </div>
             </div>
           </nav>
 
@@ -128,7 +127,14 @@ const Navigation = ({ currentView, setCurrentView, currentUser, onLogout, isAdmi
           <div className="header-actions">
             <span className="welcome-text">Welcome, {currentUser?.name}</span>
             <span className="user-role">({currentUser?.role})</span>
-            <button className="help-btn">Help</button>
+            <a 
+              href="https://wa.me/08021025168"
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="help-btn"
+            >
+              Help via WhatsApp
+            </a>
           </div>
         </div>
       </header>
@@ -156,14 +162,27 @@ const Navigation = ({ currentView, setCurrentView, currentUser, onLogout, isAdmi
               </button>
             </li>
 
-            {/* Courses Link - Show for all roles */}
+            {/* My Courses Link - Only for students */}
+            {isStudent && (
+              <li>
+                <button 
+                  className={`app-nav-btn ${currentView === 'my-courses' ? 'active' : ''}`}
+                  onClick={() => handleNavClick('my-courses')}
+                >
+                  <span className="nav-icon">📖</span>
+                  <span className="nav-label">My Courses</span>
+                </button>
+              </li>
+            )}
+
+            {/* Courses Catalog Link - Show for all roles */}
             <li>
               <button 
                 className={`app-nav-btn ${currentView === 'courses' ? 'active' : ''}`}
                 onClick={() => handleNavClick('courses')}
               >
                 <span className="nav-icon">📚</span>
-                <span className="nav-label">Courses</span>
+                <span className="nav-label">Course Catalog</span>
               </button>
             </li>
 
