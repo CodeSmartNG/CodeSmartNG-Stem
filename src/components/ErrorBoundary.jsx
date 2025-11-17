@@ -20,6 +20,7 @@ class ErrorBoundary extends React.Component {
         <div style={{ padding: '2rem', textAlign: 'center' }}>
           <h1>Something went wrong</h1>
           <p>We're working on fixing this issue.</p>
+          <p>(Dan Allah kudan jiramu kadan muna wani gyara)</p>
           <button 
             onClick={() => window.location.reload()}
             style={{
