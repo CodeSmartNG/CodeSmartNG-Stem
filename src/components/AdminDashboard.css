@@ -1,3 +1,172 @@
+
+/* AdminDashboard.css - Additional styles for debug features */
+
+.admin-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.debug-buttons {
+  display: flex;
+  gap: 10px;
+}
+
+.debug-btn {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.debug-btn.test-btn {
+  background: #4CAF50;
+  color: white;
+}
+
+.debug-btn.debug-btn {
+  background: #ff9800;
+  color: white;
+}
+
+.debug-btn.registration-btn {
+  background: #f44336;
+  color: white;
+}
+
+.debug-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+}
+
+/* Debug Panel */
+.debug-panel {
+  margin: 20px 0;
+  padding: 15px;
+  border-radius: 8px;
+  border-left: 4px solid;
+}
+
+.debug-panel.success {
+  background: #d4edda;
+  border-left-color: #28a745;
+  color: #155724;
+}
+
+.debug-panel.error {
+  background: #f8d7da;
+  border-left-color: #dc3545;
+  color: #721c24;
+}
+
+.debug-panel.info {
+  background: #d1ecf1;
+  border-left-color: #17a2b8;
+  color: #0c5460;
+}
+
+.debug-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.debug-title {
+  font-weight: 600;
+  font-size: 1.1rem;
+}
+
+.close-debug {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: inherit;
+}
+
+.debug-content {
+  font-size: 0.95rem;
+}
+
+.debug-details {
+  margin-top: 10px;
+}
+
+.debug-details summary {
+  cursor: pointer;
+  font-weight: 600;
+  margin-bottom: 5px;
+}
+
+.debug-details pre {
+  background: rgba(0,0,0,0.1);
+  padding: 10px;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  overflow-x: auto;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+/* Empty state actions */
+.empty-state-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 15px;
+  justify-content: center;
+}
+
+/* Table header */
+.table-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.refresh-btn.small {
+  padding: 6px 12px;
+  font-size: 0.85rem;
+}
+
+/* Activity actions */
+.activity-action {
+  background: #007bff;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  margin-top: 8px;
+}
+
+.activity-action:hover {
+  background: #0056b3;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .admin-header-actions {
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .debug-buttons {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  
+  .debug-btn {
+    font-size: 0.8rem;
+    padding: 6px 12px;
+  }
+}
+
 /* AdminDashboard.css */
 
 .admin-dashboard {
