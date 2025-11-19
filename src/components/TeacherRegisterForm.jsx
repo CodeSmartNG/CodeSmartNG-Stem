@@ -16,6 +16,7 @@ const TeacherRegisterForm = ({ onRegister, onSwitchToLogin }) => {
   const [formData, setFormData] = useState(initialFormState);
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
+  const [successMessage, setSuccessMessage] = useState('');
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -30,6 +31,11 @@ const TeacherRegisterForm = ({ onRegister, onSwitchToLogin }) => {
         ...prev,
         [name]: ''
       }));
+    }
+    
+    // Clear success message when user makes changes
+    if (successMessage) {
+      setSuccessMessage('');
     }
   };
 
@@ -82,29 +88,46 @@ const TeacherRegisterForm = ({ onRegister, onSwitchToLogin }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    console.log('Form submission started...');
     setLoading(true);
+    setErrors({});
+    setSuccessMessage('');
     
     if (!validateForm()) {
+      console.log('Form validation failed');
       setLoading(false);
       return false;
     }
 
     try {
+      console.log('Calling onRegister with data:', formData);
+      
+      // Check if onRegister function exists
+      if (!onRegister || typeof onRegister !== 'function') {
+        throw new Error('Registration function is not available');
+      }
+
       const success = await onRegister(formData);
+      console.log('Registration result:', success);
+      
       if (success) {
-        // Clear form on success
+        setSuccessMessage('Registration successful! Please check your email for verification.');
         setFormData(initialFormState);
         setErrors({});
         return true;
+      } else {
+        setErrors({ submit: 'Registration failed. Please try again.' });
+        return false;
       }
     } catch (error) {
       console.error('Registration error:', error);
-      setErrors({ submit: 'Registration failed. Please try again.' });
+      setErrors({ 
+        submit: error.message || 'Registration failed. Please try again.' 
+      });
+      return false;
     } finally {
       setLoading(false);
     }
-    
-    return false;
   };
 
   return (
@@ -114,13 +137,19 @@ const TeacherRegisterForm = ({ onRegister, onSwitchToLogin }) => {
         <p>Join our team of passionate educators</p>
       </div>
 
+      {successMessage && (
+        <div className="success-message">
+          {successMessage}
+        </div>
+      )}
+
       {errors.submit && (
         <div className="error-message submit-error">
           {errors.submit}
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="teacher-form">
+      <form onSubmit={handleSubmit} className="teacher-form" noValidate>
         <div className="form-row">
           <div className="form-group">
             <label htmlFor="name">Full Name *</label>
@@ -132,6 +161,7 @@ const TeacherRegisterForm = ({ onRegister, onSwitchToLogin }) => {
               onChange={handleChange}
               className={errors.name ? 'error' : ''}
               placeholder="Enter your full name"
+              disabled={loading}
             />
             {errors.name && <span className="error-text">{errors.name}</span>}
           </div>
@@ -146,6 +176,7 @@ const TeacherRegisterForm = ({ onRegister, onSwitchToLogin }) => {
               onChange={handleChange}
               className={errors.email ? 'error' : ''}
               placeholder="Enter your email"
+              disabled={loading}
             />
             {errors.email && <span className="error-text">{errors.email}</span>}
           </div>
@@ -162,6 +193,7 @@ const TeacherRegisterForm = ({ onRegister, onSwitchToLogin }) => {
               onChange={handleChange}
               className={errors.password ? 'error' : ''}
               placeholder="Create a password"
+              disabled={loading}
             />
             {errors.password && <span className="error-text">{errors.password}</span>}
           </div>
@@ -176,6 +208,7 @@ const TeacherRegisterForm = ({ onRegister, onSwitchToLogin }) => {
               onChange={handleChange}
               className={errors.confirmPassword ? 'error' : ''}
               placeholder="Confirm your password"
+              disabled={loading}
             />
             {errors.confirmPassword && <span className="error-text">{errors.confirmPassword}</span>}
           </div>
@@ -190,6 +223,7 @@ const TeacherRegisterForm = ({ onRegister, onSwitchToLogin }) => {
               value={formData.specialization}
               onChange={handleChange}
               className={errors.specialization ? 'error' : ''}
+              disabled={loading}
             >
               <option value="">Select your specialization</option>
               <option value="Computer Science">Computer Science</option>
@@ -215,6 +249,7 @@ const TeacherRegisterForm = ({ onRegister, onSwitchToLogin }) => {
               value={formData.experience}
               onChange={handleChange}
               className={errors.experience ? 'error' : ''}
+              disabled={loading}
             >
               <option value="">Select experience level</option>
               <option value="Beginner (0-2 years)">Beginner (0-2 years)</option>
@@ -236,6 +271,7 @@ const TeacherRegisterForm = ({ onRegister, onSwitchToLogin }) => {
             onChange={handleChange}
             className={errors.qualifications ? 'error' : ''}
             placeholder="e.g., B.Sc. Computer Science, M.Ed., PhD"
+            disabled={loading}
           />
           {errors.qualifications && <span className="error-text">{errors.qualifications}</span>}
         </div>
@@ -250,6 +286,7 @@ const TeacherRegisterForm = ({ onRegister, onSwitchToLogin }) => {
             className={errors.bio ? 'error' : ''}
             placeholder="Tell us about your teaching philosophy, experience, and why you want to join our platform..."
             rows="4"
+            disabled={loading}
           />
           {errors.bio && <span className="error-text">{errors.bio}</span>}
           <div className="character-count">
@@ -280,6 +317,7 @@ const TeacherRegisterForm = ({ onRegister, onSwitchToLogin }) => {
             type="button" 
             className="switch-btn"
             onClick={onSwitchToLogin}
+            disabled={loading}
           >
             Login here
           </button>
