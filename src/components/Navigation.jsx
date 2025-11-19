@@ -163,17 +163,7 @@ const Navigation = ({ currentView, setCurrentView, currentUser, onLogout, isAdmi
             </li>
 
             {/* My Courses Link - Only for students */}
-            {isStudent && (
-              <li>
-                <button 
-                  className={`app-nav-btn ${currentView === 'my-courses' ? 'active' : ''}`}
-                  onClick={() => handleNavClick('my-courses')}
-                >
-                  <span className="nav-icon">📖</span>
-                  <span className="nav-label">My Courses</span>
-                </button>
-              </li>
-            )}
+            
 
             {/* Courses Catalog Link - Show for all roles */}
             <li>
