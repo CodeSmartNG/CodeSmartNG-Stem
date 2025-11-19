@@ -1,4 +1,5 @@
-/* Course Catalog Styles - Modern Update */
+
+/* Course Catalog Styles - Modern Update with Fixed Thumbnails */
 .course-catalog {
   padding: 2rem;
   max-width: 1400px;
@@ -126,16 +127,57 @@
   margin-bottom: 1.25rem;
 }
 
+/* FIXED: Thumbnail Styles */
 .course-thumbnail {
-  font-size: 2.75rem;
+  width: 80px;
+  height: 80px;
   flex-shrink: 0;
-  background: linear-gradient(135deg, #3498db, #2980b9);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  padding: 0.75rem;
   border-radius: 12px;
-  background-color: rgba(52, 152, 219, 0.1);
+  overflow: hidden;
+  position: relative;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  border: 3px solid rgba(255, 255, 255, 0.8);
+  background: linear-gradient(135deg, #3498db, #2980b9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.course-thumbnail img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+.course-thumbnail:hover img {
+  transform: scale(1.1);
+}
+
+/* Fallback for missing images */
+.course-thumbnail:not(:has(img)) {
+  background: linear-gradient(135deg, #3498db, #2980b9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 1.5rem;
+  font-weight: bold;
+}
+
+.course-thumbnail.fallback {
+  background: linear-gradient(135deg, #3498db, #2980b9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 1.5rem;
+  font-weight: bold;
+}
+
+.course-thumbnail.fallback::before {
+  content: attr(data-course-initials);
+  font-weight: 700;
 }
 
 .course-title-section {
@@ -680,6 +722,11 @@
   .control-btn {
     padding: 0.6rem 1rem;
     font-size: 0.8rem;
+  }
+  
+  .course-thumbnail {
+    width: 60px;
+    height: 60px;
   }
 }
 
