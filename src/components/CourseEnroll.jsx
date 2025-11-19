@@ -1,16 +1,16 @@
-
 import React, { useState, useEffect } from 'react';
 import { 
   getCourses, 
   enrollStudentInCourse, 
   unenrollStudentFromCourse,
   getStudentById,
-  getEnrolledCoursesWithProgress, // Add this import
-  getCurrentUser // Add this import
+  getEnrolledCoursesWithProgress,
+  getCurrentUser,
+  updateStudentProgress // Add this import for progress tracking
 } from '../utils/storage';
 import './CourseEnroll.css';
 
-const CourseEnroll = ({ student, setStudent }) => {
+const CourseEnroll = ({ student, setStudent, onNavigateToCourse }) => {
   const [courses, setCourses] = useState({});
   const [enrolledCourses, setEnrolledCourses] = useState([]);
   const [availableCourses, setAvailableCourses] = useState([]);
@@ -26,11 +26,9 @@ const CourseEnroll = ({ student, setStudent }) => {
       const allCourses = getCourses();
       setCourses(allCourses);
       
-      // Use the fixed function to get enrolled courses
       const enrolled = getEnrolledCoursesWithProgress(student.id);
       setEnrolledCourses(enrolled);
       
-      // Get available courses (not enrolled)
       const available = Object.keys(allCourses)
         .filter(courseKey => 
           !student.enrolledCourses?.includes(courseKey)
@@ -55,7 +53,6 @@ const CourseEnroll = ({ student, setStudent }) => {
       const success = enrollStudentInCourse(student.id, courseKey);
       
       if (success) {
-        // Update local student state - get from both systems
         const updatedStudent = getStudentById(student.id) || getCurrentUser();
         if (updatedStudent) {
           setStudent(updatedStudent);
@@ -63,7 +60,6 @@ const CourseEnroll = ({ student, setStudent }) => {
         
         setMessage(`✅ Successfully enrolled in "${courses[courseKey]?.title}"`);
         
-        // Reload courses after a short delay
         setTimeout(() => {
           loadCourses();
         }, 500);
@@ -85,7 +81,6 @@ const CourseEnroll = ({ student, setStudent }) => {
       const success = unenrollStudentFromCourse(student.id, courseKey);
       
       if (success) {
-        // Update local student state
         const updatedStudent = getStudentById(student.id) || getCurrentUser();
         if (updatedStudent) {
           setStudent(updatedStudent);
@@ -93,7 +88,6 @@ const CourseEnroll = ({ student, setStudent }) => {
         
         setMessage(`✅ Unenrolled from "${courses[courseKey]?.title}"`);
         
-        // Reload courses after a short delay
         setTimeout(() => {
           loadCourses();
         }, 500);
@@ -104,17 +98,112 @@ const CourseEnroll = ({ student, setStudent }) => {
     }
   };
 
+  // FIXED: Enhanced Continue Learning function
   const handleContinueLearning = (courseKey) => {
-    // This would navigate to the course player
-    setMessage(`🎯 Continuing with "${courses[courseKey]?.title}"`);
-    
-    // In a full implementation, you would navigate to the course:
-    // window.location.href = `/course/${courseKey}`;
-    // or use your routing system:
-    // navigate(`/course/${courseKey}`);
+    try {
+      const course = courses[courseKey];
+      if (!course) {
+        setMessage('❌ Course not found. Please try again.');
+        return;
+      }
+
+      console.log('Continuing with course:', course.title, 'Key:', courseKey);
+
+      // Method 1: Use the callback prop if provided
+      if (onNavigateToCourse && typeof onNavigateToCourse === 'function') {
+        onNavigateToCourse(courseKey);
+        setMessage(`🎯 Opening "${course.title}"...`);
+        return;
+      }
+
+      // Method 2: Check if we're in a React Router environment
+      if (window.ReactRouter && window.ReactRouter.useNavigate) {
+        const navigate = window.ReactRouter.useNavigate();
+        navigate(`/course/${courseKey}`);
+        setMessage(`🎯 Navigating to "${course.title}"...`);
+        return;
+      }
+
+      // Method 3: Use window location for simple navigation
+      if (window.location && window.location.pathname) {
+        const currentPath = window.location.pathname;
+        const basePath = currentPath.split('/').slice(0, -1).join('/') || '';
+        window.location.href = `${basePath}/course/${courseKey}`;
+        setMessage(`🎯 Loading "${course.title}"...`);
+        return;
+      }
+
+      // Method 4: Show course details in current page (fallback)
+      setMessage(`🎯 Course: ${course.title} - Progress: ${course.progress || 0}% - ${course.lessons?.length || 0} lessons available`);
+      
+      // You can expand this to show course content directly
+      showCoursePreview(course);
+
+    } catch (error) {
+      console.error('Error continuing course:', error);
+      setMessage('❌ Error opening course. Please try again.');
+    }
   };
 
-  // Add this function to sync student data
+  // Fallback function to show course preview
+  const showCoursePreview = (course) => {
+    // This is a fallback - you can implement a modal or expandable section
+    const lessonCount = course.lessons?.length || 0;
+    const completedLessons = course.completedLessons || 0;
+    
+    alert(`Course: ${course.title}\n\n` +
+          `Progress: ${course.progress || 0}%\n` +
+          `Lessons: ${completedLessons}/${lessonCount} completed\n\n` +
+          `In a full implementation, this would open the course player.`);
+  };
+
+  // NEW: Function to start the first lesson
+  const handleStartCourse = (courseKey) => {
+    const course = courses[courseKey];
+    if (!course || !course.lessons || course.lessons.length === 0) {
+      setMessage('❌ No lessons available in this course.');
+      return;
+    }
+
+    const firstLesson = course.lessons[0];
+    console.log('Starting first lesson:', firstLesson.title);
+    
+    // You can implement navigation to the first lesson here
+    setMessage(`🎬 Starting "${firstLesson.title}" from "${course.title}"`);
+    
+    // If you have a lesson navigation function, call it here
+    if (onNavigateToCourse) {
+      onNavigateToCourse(courseKey, 0); // 0 for first lesson
+    }
+  };
+
+  // NEW: Function to resume from last completed lesson
+  const handleResumeCourse = (courseKey) => {
+    const course = courses[courseKey];
+    if (!course || !course.lessons || course.lessons.length === 0) {
+      setMessage('❌ No lessons available in this course.');
+      return;
+    }
+
+    const completedLessons = course.completedLessons || 0;
+    const nextLessonIndex = completedLessons;
+    
+    if (nextLessonIndex >= course.lessons.length) {
+      setMessage('🎉 You have completed all lessons in this course!');
+      return;
+    }
+
+    const nextLesson = course.lessons[nextLessonIndex];
+    console.log('Resuming from lesson:', nextLesson.title);
+    
+    setMessage(`➤ Resuming "${nextLesson.title}" from "${course.title}"`);
+    
+    // If you have a lesson navigation function, call it here
+    if (onNavigateToCourse) {
+      onNavigateToCourse(courseKey, nextLessonIndex);
+    }
+  };
+
   const syncStudentData = () => {
     try {
       const currentUser = getCurrentUser();
@@ -150,12 +239,38 @@ const CourseEnroll = ({ student, setStudent }) => {
     );
   };
 
-  // Add a refresh button handler
   const handleRefresh = () => {
     setLoading(true);
     setMessage('');
     loadCourses();
     syncStudentData();
+  };
+
+  // NEW: Get the appropriate button text and handler based on course progress
+  const getContinueButtonInfo = (course) => {
+    const progress = course.progress || 0;
+    const isNew = progress === 0;
+    const isCompleted = progress === 100;
+
+    if (isCompleted) {
+      return {
+        text: '🎓 Review Course',
+        handler: () => handleContinueLearning(course.key),
+        className: 'completed-btn'
+      };
+    } else if (isNew) {
+      return {
+        text: '🚀 Start Learning',
+        handler: () => handleStartCourse(course.key),
+        className: 'start-btn'
+      };
+    } else {
+      return {
+        text: '➤ Continue Learning',
+        handler: () => handleResumeCourse(course.key),
+        className: 'continue-btn'
+      };
+    }
   };
 
   if (loading) {
@@ -182,7 +297,6 @@ const CourseEnroll = ({ student, setStudent }) => {
         </div>
         <p>Manage your enrolled courses and discover new ones</p>
         
-        {/* Student Info */}
         <div className="student-info-card">
           <div className="student-avatar">
             {student.name?.charAt(0) || 'S'}
@@ -195,7 +309,7 @@ const CourseEnroll = ({ student, setStudent }) => {
       </div>
 
       {message && (
-        <div className={`message ${message.includes('✅') || message.includes('🎯') ? 'success' : 'error'}`}>
+        <div className={`message ${message.includes('✅') || message.includes('🎯') || message.includes('🎬') || message.includes('➤') || message.includes('🚀') ? 'success' : 'error'}`}>
           {message}
         </div>
       )}
@@ -219,58 +333,64 @@ const CourseEnroll = ({ student, setStudent }) => {
           </div>
         ) : (
           <div className="enrolled-courses-grid">
-            {enrolledCourses.map(course => (
-              <div key={course.key} className="enrolled-course-card">
-                <div className="course-header">
-                  <div className="course-thumbnail">
-                    {course.thumbnail || '📖'}
-                  </div>
-                  <div className="course-info">
-                    <h3>{course.title}</h3>
-                    <p className="course-description">{course.description}</p>
-                    <div className="course-meta">
-                      <span className="teacher">By {course.teacherName}</span>
-                      {getDifficultyBadge(course.difficulty)}
+            {enrolledCourses.map(course => {
+              const buttonInfo = getContinueButtonInfo(course);
+              return (
+                <div key={course.key} className="enrolled-course-card">
+                  <div className="course-header">
+                    <div className="course-thumbnail">
+                      {course.thumbnail || '📖'}
+                    </div>
+                    <div className="course-info">
+                      <h3>{course.title}</h3>
+                      <p className="course-description">{course.description}</p>
+                      <div className="course-meta">
+                        <span className="teacher">By {course.teacherName}</span>
+                        {getDifficultyBadge(course.difficulty)}
+                      </div>
                     </div>
                   </div>
-                </div>
-                
-                <div className="progress-section">
-                  <div className="progress-header">
-                    <span>Your Progress</span>
-                    <span className="progress-percent">{course.progress || 0}%</span>
+                  
+                  <div className="progress-section">
+                    <div className="progress-header">
+                      <span>Your Progress</span>
+                      <span className="progress-percent">{course.progress || 0}%</span>
+                    </div>
+                    <div className="progress-bar">
+                      <div 
+                        className="progress-fill"
+                        style={{ 
+                          width: `${course.progress || 0}%`,
+                          backgroundColor: getProgressColor(course.progress || 0)
+                        }}
+                      ></div>
+                    </div>
+                    <div className="course-stats">
+                      <span>{course.lessons?.length || 0} lessons</span>
+                      <span>
+                        {course.progress === 100 ? '✅ Completed' : 
+                         course.progress === 0 ? '🆕 Not Started' : '🔄 In Progress'}
+                      </span>
+                    </div>
                   </div>
-                  <div className="progress-bar">
-                    <div 
-                      className="progress-fill"
-                      style={{ 
-                        width: `${course.progress || 0}%`,
-                        backgroundColor: getProgressColor(course.progress || 0)
-                      }}
-                    ></div>
-                  </div>
-                  <div className="course-stats">
-                    <span>{course.lessons?.length || 0} lessons</span>
-                    <span>{course.isCompleted ? '✅ Completed' : '🔄 In Progress'}</span>
+                  
+                  <div className="course-actions">
+                    <button 
+                      className={buttonInfo.className}
+                      onClick={buttonInfo.handler}
+                    >
+                      {buttonInfo.text}
+                    </button>
+                    <button 
+                      className="unenroll-btn"
+                      onClick={() => handleUnenroll(course.key)}
+                    >
+                      🗑️ Unenroll
+                    </button>
                   </div>
                 </div>
-                
-                <div className="course-actions">
-                  <button 
-                    className={`continue-btn ${course.isCompleted ? 'completed' : ''}`}
-                    onClick={() => handleContinueLearning(course.key)}
-                  >
-                    {course.isCompleted ? '🎓 Completed' : '➤ Continue Learning'}
-                  </button>
-                  <button 
-                    className="unenroll-btn"
-                    onClick={() => handleUnenroll(course.key)}
-                  >
-                    🗑️ Unenroll
-                  </button>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </section>
