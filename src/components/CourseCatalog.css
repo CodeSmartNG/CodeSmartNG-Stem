@@ -1,4 +1,4 @@
-/* CourseCatalog.css - Updated for better video positioning */
+/* CourseCatalog.css - Fixed video covering content */
 
 .course-lesson {
   position: relative;
@@ -50,27 +50,30 @@
   white-space: nowrap;
 }
 
-/* Multimedia Container - Much closer to the top */
+/* Multimedia Container - Fixed positioning */
 .multimedia-container {
   position: relative;
-  margin: 10px 0 20px 0; /* Reduced margin to bring video closer */
+  margin: 10px 0 20px 0;
   transition: all 0.3s ease;
+  z-index: 10; /* Base z-index */
 }
 
 .multimedia-container.sticky {
   position: fixed;
   top: 0;
-  left: 0;
-  right: 0;
-  z-index: 1000;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1000; /* Higher than normal content */
   background: white;
   padding: 10px;
   box-shadow: 0 2px 20px rgba(0,0,0,0.15);
   margin: 0;
+  width: 90%;
+  max-width: 500px; /* Smaller when sticky */
 }
 
 .multimedia-container.sticky .multimedia-viewer {
-  max-width: 400px;
+  width: 100%;
   margin: 0 auto;
   transform: scale(0.9);
   transform-origin: top center;
@@ -87,7 +90,7 @@
   font-weight: 500;
 }
 
-/* Lesson content right below the video */
+/* Lesson content with proper z-index */
 .lesson-content {
   background: white;
   padding: 25px;
@@ -95,6 +98,8 @@
   margin: 15px 0;
   box-shadow: 0 2px 10px rgba(0,0,0,0.08);
   line-height: 1.6;
+  position: relative;
+  z-index: 1; /* Below sticky video */
 }
 
 .lesson-content p {
@@ -107,23 +112,19 @@
   color: #333;
 }
 
-/* Adjust spacing when video is sticky */
-.multimedia-container.sticky + .lesson-content {
-  margin-top: 180px; /* Reduced from 300px to bring content closer */
+/* IMPORTANT: Add padding to top of content when video is sticky */
+.multimedia-container.sticky ~ * {
+  margin-top: 220px !important; /* Reserve space for sticky video */
 }
 
-/* Multimedia Viewer Styles */
-.multimedia-viewer {
-  width: 100%;
-  max-width: 900px;
-  margin: 0 auto;
-  border-radius: 12px;
-  overflow: hidden;
-  box-shadow: 0 8px 25px rgba(0,0,0,0.15);
-  background: #000;
+/* Specific spacing for elements that follow the sticky video */
+.multimedia-container.sticky + .lesson-content,
+.multimedia-container.sticky ~ .quiz-section,
+.multimedia-container.sticky ~ .lesson-navigation {
+  margin-top: 220px; /* Enough space for sticky video + indicator */
 }
 
-/* Quiz Section */
+/* Quiz Section - Ensure it's visible */
 .quiz-section {
   background: white;
   padding: 25px;
@@ -132,6 +133,8 @@
   box-shadow: 0 2px 10px rgba(0,0,0,0.08);
   text-align: center;
   border-left: 4px solid #667eea;
+  position: relative;
+  z-index: 1; /* Below sticky video */
 }
 
 .quiz-section h3 {
@@ -155,6 +158,8 @@
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;
+  position: relative;
+  z-index: 2; /* Above normal content */
 }
 
 .start-quiz-btn:hover {
@@ -173,6 +178,8 @@
   margin-top: 25px;
   box-shadow: 0 2px 10px rgba(0,0,0,0.08);
   gap: 15px;
+  position: relative;
+  z-index: 1; /* Below sticky video */
 }
 
 .lesson-navigation button {
@@ -183,6 +190,8 @@
   cursor: pointer;
   transition: all 0.3s ease;
   font-size: 1rem;
+  position: relative;
+  z-index: 2; /* Above normal content */
 }
 
 .lesson-navigation button:not(.complete-btn):not(:disabled) {
@@ -218,6 +227,17 @@
   transform: none;
 }
 
+/* Multimedia Viewer Styles */
+.multimedia-viewer {
+  width: 100%;
+  max-width: 900px;
+  margin: 0 auto;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+  background: #000;
+}
+
 /* Responsive Design */
 @media (max-width: 768px) {
   .course-lesson {
@@ -234,13 +254,24 @@
     font-size: 1.5rem;
   }
   
+  .multimedia-container.sticky {
+    max-width: 350px;
+    padding: 8px;
+  }
+  
   .multimedia-container.sticky .multimedia-viewer {
-    max-width: 300px;
     transform: scale(0.85);
   }
   
-  .multimedia-container.sticky + .lesson-content {
-    margin-top: 150px; /* Even closer on mobile */
+  /* Adjust spacing for mobile */
+  .multimedia-container.sticky ~ * {
+    margin-top: 180px !important;
+  }
+  
+  .multimedia-container.sticky + .lesson-content,
+  .multimedia-container.sticky ~ .quiz-section,
+  .multimedia-container.sticky ~ .lesson-navigation {
+    margin-top: 180px;
   }
   
   .lesson-navigation {
@@ -259,13 +290,24 @@
     padding: 10px;
   }
   
+  .multimedia-container.sticky {
+    max-width: 280px;
+    padding: 5px;
+  }
+  
   .multimedia-container.sticky .multimedia-viewer {
-    max-width: 250px;
     transform: scale(0.8);
   }
   
-  .multimedia-container.sticky + .lesson-content {
-    margin-top: 130px; /* Closest on very small screens */
+  /* Even smaller spacing for very small screens */
+  .multimedia-container.sticky ~ * {
+    margin-top: 150px !important;
+  }
+  
+  .multimedia-container.sticky + .lesson-content,
+  .multimedia-container.sticky ~ .quiz-section,
+  .multimedia-container.sticky ~ .lesson-navigation {
+    margin-top: 150px;
   }
   
   .lesson-content {
@@ -288,17 +330,6 @@ button:focus {
   outline-offset: 2px;
 }
 
-/* Loading state for multimedia */
-.multimedia-viewer.loading {
-  background: #f8f9fa;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 200px;
-  color: #666;
-  font-style: italic;
-}
-
 /* Video controls styling */
 .multimedia-viewer video {
   width: 100%;
@@ -311,4 +342,18 @@ button:focus {
   width: 100%;
   height: auto;
   display: block;
+}
+
+/* Ensure quiz component is visible when active */
+.quiz-component {
+  position: relative;
+  z-index: 1001 !important; /* Above everything including sticky video */
+  background: white;
+  margin: 20px 0;
+}
+
+/* Additional safety for interactive elements */
+.interactive-element {
+  position: relative;
+  z-index: 10;
 }
