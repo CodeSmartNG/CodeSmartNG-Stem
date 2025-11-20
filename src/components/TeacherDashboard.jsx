@@ -9,7 +9,8 @@ import {
   deleteLesson,
   addMultimediaToLesson,
   deleteMultimediaFromLesson,
-  getTeacherStats
+  getTeacherStats,
+  toggleLessonLock // We'll need to add this function to storage.js
 } from '../utils/storage';
 import './TeacherDashboard.css';
 
@@ -17,7 +18,7 @@ const TeacherDashboard = () => {
   const [activeTab, setActiveTab] = useState('overview');
   const [stats, setStats] = useState(null);
   const [courses, setCoursesState] = useState({});
-  
+
   // Course Form States
   const [newCourseForm, setNewCourseForm] = useState({
     title: '',
@@ -25,7 +26,7 @@ const TeacherDashboard = () => {
     thumbnail: '📚',
     key: ''
   });
-  
+
   // Lesson Form States with Video Support
   const [newLessonForm, setNewLessonForm] = useState({
     courseKey: '',
@@ -34,9 +35,10 @@ const TeacherDashboard = () => {
     duration: '',
     videoUrl: '',
     videoTitle: '',
-    videoDescription: ''
+    videoDescription: '',
+    isLocked: false // NEW: Default to free lesson
   });
-  
+
   // Quiz Form States
   const [quizForm, setQuizForm] = useState({
     title: '',
@@ -53,14 +55,14 @@ const TeacherDashboard = () => {
   });
 
   const [showQuizForm, setShowQuizForm] = useState(false);
-  
+
   // Edit States
   const [editingCourse, setEditingCourse] = useState(null);
   const [editCourseForm, setEditCourseForm] = useState({});
   const [editingLesson, setEditingLesson] = useState(null);
   const [editLessonForm, setEditLessonForm] = useState({});
   const [viewingCourseLessons, setViewingCourseLessons] = useState(null);
-  
+
   // Multimedia States
   const [managingMultimedia, setManagingMultimedia] = useState(null);
   const [newMultimediaForm, setNewMultimediaForm] = useState({
@@ -73,26 +75,26 @@ const TeacherDashboard = () => {
   // Function to extract YouTube video ID from various URL formats
   const getYouTubeEmbedUrl = (url) => {
     if (!url) return '';
-    
+
     // If it's already an embed URL, return as is
     if (url.includes('youtube.com/embed/')) {
       return url;
     }
-    
+
     // Extract video ID from various YouTube URL formats
     const patterns = [
       /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&]+)/,
       /youtube\.com\/v\/([^?]+)/,
       /youtube\.com\/watch\?.*v=([^&]+)/
     ];
-    
+
     for (const pattern of patterns) {
       const match = url.match(pattern);
       if (match && match[1]) {
         return `https://www.youtube.com/embed/${match[1]}`;
       }
     }
-    
+
     // If no pattern matches, return original URL
     return url;
   };
@@ -110,6 +112,23 @@ const TeacherDashboard = () => {
   const loadData = () => {
     setStats(getTeacherStats());
     setCoursesState(getTeacherCourses());
+  };
+
+  // NEW: Function to toggle lesson lock status
+  const handleToggleLessonLock = (courseKey, lessonId, currentStatus) => {
+    try {
+      // We'll need to implement this function in storage.js
+      toggleLessonLock(courseKey, lessonId, !currentStatus);
+      alert(`Lesson ${!currentStatus ? 'locked' : 'unlocked'} successfully!`);
+      loadData();
+      
+      // Update the local state if we're currently viewing the course
+      if (viewingCourseLessons === courseKey) {
+        setViewingCourseLessons(courseKey); // This will trigger a re-render
+      }
+    } catch (error) {
+      alert('Error updating lesson lock status: ' + error.message);
+    }
   };
 
   // Course Management Functions
@@ -253,7 +272,8 @@ const TeacherDashboard = () => {
         duration: newLessonForm.duration,
         completed: false,
         multimedia: [],
-        quiz: null
+        quiz: null,
+        isLocked: newLessonForm.isLocked // NEW: Include lock status
       };
 
       // Add video if provided
@@ -279,7 +299,7 @@ const TeacherDashboard = () => {
 
       addLessonToCourse(newLessonForm.courseKey, lessonData);
       alert('Lesson added successfully!');
-      
+
       // Reset all forms
       setNewLessonForm({
         courseKey: '',
@@ -288,7 +308,8 @@ const TeacherDashboard = () => {
         duration: '',
         videoUrl: '',
         videoTitle: '',
-        videoDescription: ''
+        videoDescription: '',
+        isLocked: false // Reset to default
       });
       resetQuizForm();
       loadData();
@@ -307,7 +328,8 @@ const TeacherDashboard = () => {
     setEditLessonForm({
       title: lesson.title,
       content: lesson.content,
-      duration: lesson.duration
+      duration: lesson.duration,
+      isLocked: lesson.isLocked || false // NEW: Include lock status in edit form
     });
   };
 
@@ -351,12 +373,12 @@ const TeacherDashboard = () => {
     e.preventDefault();
     try {
       const multimediaData = { ...newMultimediaForm };
-      
+
       // Convert YouTube URLs to embed format
       if (multimediaData.type === 'video' && isValidYouTubeUrl(multimediaData.url)) {
         multimediaData.url = getYouTubeEmbedUrl(multimediaData.url);
       }
-      
+
       addMultimediaToLesson(
         managingMultimedia.courseKey, 
         managingMultimedia.lesson.id, 
@@ -522,6 +544,10 @@ const TeacherDashboard = () => {
                       <div className="course-stats">
                         <span>Lessons: {course.lessons?.length || 0}</span>
                         <span>Students: {course.enrolledStudents || 0}</span>
+                        {/* NEW: Show locked lessons count */}
+                        <span className="locked-lessons">
+                          Locked: {course.lessons?.filter(lesson => lesson.isLocked).length || 0}
+                        </span>
                       </div>
                       <div className="course-actions">
                         <button className="edit-btn" onClick={() => startEditCourse(key)}>Edit</button>
@@ -543,7 +569,7 @@ const TeacherDashboard = () => {
               Manage Lessons 
               {viewingCourseLessons && ` - ${courses[viewingCourseLessons]?.title}`}
             </h3>
-            
+
             {!viewingCourseLessons ? (
               <div className="select-course-prompt">
                 <p>Select a course to manage its lessons:</p>
@@ -567,10 +593,10 @@ const TeacherDashboard = () => {
                 >
                   ← Back to Courses
                 </button>
-                
+
                 <div className="lessons-list">
                   {courses[viewingCourseLessons]?.lessons?.map((lesson) => (
-                    <div key={lesson.id} className="lesson-teacher-card">
+                    <div key={lesson.id} className={`lesson-teacher-card ${lesson.isLocked ? 'locked' : ''}`}>
                       {editingLesson?.courseKey === viewingCourseLessons && editingLesson.lessonId === lesson.id ? (
                         <div className="edit-lesson-form">
                           <h4>Edit Lesson</h4>
@@ -602,6 +628,20 @@ const TeacherDashboard = () => {
                                 required
                               />
                             </div>
+                            {/* NEW: Lock/Unlock toggle in edit form */}
+                            <div className="form-group lock-toggle">
+                              <label>
+                                <input
+                                  type="checkbox"
+                                  checked={editLessonForm.isLocked || false}
+                                  onChange={(e) => setEditLessonForm({...editLessonForm, isLocked: e.target.checked})}
+                                />
+                                Lock Lesson (Paid Content)
+                              </label>
+                              <small className="help-text">
+                                Locked lessons require payment to access
+                              </small>
+                            </div>
                             <div className="form-actions">
                               <button type="submit" className="save-btn">Save Changes</button>
                               <button type="button" onClick={cancelEditLesson} className="cancel-btn">Cancel</button>
@@ -611,7 +651,13 @@ const TeacherDashboard = () => {
                       ) : (
                         <>
                           <div className="lesson-info">
-                            <h5>{lesson.title}</h5>
+                            <div className="lesson-header-row">
+                              <h5>{lesson.title}</h5>
+                              {/* NEW: Lock status badge */}
+                              <span className={`lock-status ${lesson.isLocked ? 'locked' : 'free'}`}>
+                                {lesson.isLocked ? '🔒 Locked' : '🔓 Free'}
+                              </span>
+                            </div>
                             <p><strong>Duration:</strong> {lesson.duration}</p>
                             <p className="lesson-content-preview">{lesson.content.substring(0, 100)}...</p>
                             {lesson.multimedia && lesson.multimedia.length > 0 && (
@@ -626,6 +672,14 @@ const TeacherDashboard = () => {
                             )}
                           </div>
                           <div className="lesson-actions">
+                            {/* NEW: Lock/Unlock toggle button */}
+                            <button 
+                              className={`lock-btn ${lesson.isLocked ? 'unlock' : 'lock'}`}
+                              onClick={() => handleToggleLessonLock(viewingCourseLessons, lesson.id, lesson.isLocked)}
+                              title={lesson.isLocked ? 'Unlock lesson (make free)' : 'Lock lesson (make paid)'}
+                            >
+                              {lesson.isLocked ? '🔓 Unlock' : '🔒 Lock'}
+                            </button>
                             <button 
                               className="edit-btn"
                               onClick={() => startEditLesson(viewingCourseLessons, lesson)}
@@ -750,6 +804,21 @@ const TeacherDashboard = () => {
                 />
               </div>
 
+              {/* NEW: Lock/Unlock toggle for new lessons */}
+              <div className="form-group lock-toggle">
+                <label>
+                  <input
+                    type="checkbox"
+                    checked={newLessonForm.isLocked}
+                    onChange={(e) => setNewLessonForm({...newLessonForm, isLocked: e.target.checked})}
+                  />
+                  Lock Lesson (Paid Content)
+                </label>
+                <small className="help-text">
+                  Locked lessons will require payment for students to access
+                </small>
+              </div>
+
               {/* Video Embed Section */}
               <div className="video-embed-section">
                 <h4>Video Content (Optional)</h4>
@@ -835,6 +904,7 @@ const TeacherDashboard = () => {
 
                 {showQuizForm && (
                   <div className="quiz-form">
+                    {/* ... existing quiz form content remains the same ... */}
                     <div className="form-group">
                       <label>Quiz Title</label>
                       <input
@@ -859,7 +929,7 @@ const TeacherDashboard = () => {
                     {/* Current Question Form */}
                     <div className="current-question">
                       <h5>Add New Question</h5>
-                      
+
                       <div className="form-group">
                         <label>Question Type</label>
                         <select
@@ -973,7 +1043,7 @@ const TeacherDashboard = () => {
               Manage Multimedia Content
               {managingMultimedia && ` - ${managingMultimedia.lesson.title}`}
             </h3>
-            
+
             {!managingMultimedia ? (
               <div className="select-lesson-prompt">
                 <p>Select a lesson to manage its multimedia content:</p>
@@ -985,6 +1055,10 @@ const TeacherDashboard = () => {
                           <strong>{lesson.title}</strong>
                           <span>Course: {course.title}</span>
                           <span>Duration: {lesson.duration}</span>
+                          {/* NEW: Show lock status */}
+                          <span className={`lesson-lock-indicator ${lesson.isLocked ? 'locked' : 'free'}`}>
+                            {lesson.isLocked ? '🔒 Locked' : '🔓 Free'}
+                          </span>
                         </div>
                         <div className="multimedia-stats">
                           {lesson.multimedia && lesson.multimedia.length > 0 ? (
@@ -1014,6 +1088,10 @@ const TeacherDashboard = () => {
                     ← Back to Lessons
                   </button>
                   <h4>Managing: {managingMultimedia.lesson.title}</h4>
+                  {/* NEW: Show lock status in header */}
+                  <span className={`header-lock-status ${managingMultimedia.lesson.isLocked ? 'locked' : 'free'}`}>
+                    {managingMultimedia.lesson.isLocked ? '🔒 Locked Lesson' : '🔓 Free Lesson'}
+                  </span>
                 </div>
 
                 {/* Add New Multimedia Form */}
