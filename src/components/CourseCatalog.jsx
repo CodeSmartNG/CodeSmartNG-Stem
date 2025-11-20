@@ -1,3 +1,4 @@
+// Updated CourseCatalog component without sticky video logic
 import React, { useState, useEffect } from 'react';
 import { getCourses } from '../utils/storage';
 import Quiz from './Quiz';
@@ -11,7 +12,6 @@ const CourseCatalog = ({ student, setStudent }) => {
   const [showQuiz, setShowQuiz] = useState(false);
   const [currentQuiz, setCurrentQuiz] = useState(null);
   const [expandedCourses, setExpandedCourses] = useState({});
-  const [isVideoSticky, setIsVideoSticky] = useState(false);
 
   // Load courses from storage
   useEffect(() => {
@@ -23,22 +23,6 @@ const CourseCatalog = ({ student, setStudent }) => {
     console.log('Loaded courses:', coursesData);
     setCourses(coursesData || {});
   };
-
-  // Handle scroll for sticky video
-  useEffect(() => {
-    const handleScroll = () => {
-      if (selectedCourse) {
-        const videoElement = document.querySelector('.multimedia-viewer');
-        if (videoElement) {
-          const rect = videoElement.getBoundingClientRect();
-          setIsVideoSticky(rect.top <= 0);
-        }
-      }
-    };
-
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, [selectedCourse]);
 
   // Toggle course expansion
   const toggleCourseExpansion = (courseKey) => {
@@ -160,15 +144,10 @@ const CourseCatalog = ({ student, setStudent }) => {
           {isCompleted && <span className="completion-badge">Completed ✓</span>}
         </div>
         
-        {/* Multimedia Content - Sticky at top */}
+        {/* Multimedia Content - Simple normal behavior */}
         {lesson.multimedia && lesson.multimedia.length > 0 && (
-          <div className={`multimedia-container ${isVideoSticky ? 'sticky' : ''}`}>
+          <div className="multimedia-container">
             <MultimediaViewer multimedia={lesson.multimedia} />
-            {isVideoSticky && (
-              <div className="sticky-indicator">
-                📺 Playing: {lesson.title}
-              </div>
-            )}
           </div>
         )}
 
@@ -225,7 +204,7 @@ const CourseCatalog = ({ student, setStudent }) => {
     );
   }
 
-  // Main course catalog view with collapsible lessons
+  // Main course catalog view (unchanged)
   return (
     <div className="course-catalog">
       <div className="catalog-header">
