@@ -130,6 +130,7 @@ export const initializeStorage = () => {
             content: "HTML is the first part of a website. It provides the structure of web pages.",
             duration: "30 minutes",
             completed: false,
+            isLocked: false, // NEW: Default to unlocked
             multimedia: [
               {
                 id: 1,
@@ -175,6 +176,7 @@ export const initializeStorage = () => {
             content: "Start learning about the basic components in Python: variables, data types, and basic operations.",
             duration: "40 minutes",
             completed: false,
+            isLocked: false, // NEW: Default to unlocked
             multimedia: [],
             quiz: {
               title: "Python Questions",
@@ -212,6 +214,7 @@ export const initializeStorage = () => {
             content: "Start learning about algebra and how to use it to solve problems.",
             duration: "35 minutes",
             completed: false,
+            isLocked: false, // NEW: Default to unlocked
             multimedia: [],
             quiz: {
               title: "Algebra Questions",
@@ -237,88 +240,86 @@ export const initializeStorage = () => {
   debugStorage(); // Show final state
 };
 
-
-
 // ==================== COURSE ENROLLMENT FUNCTIONS ====================
 export const enrollStudentInCourse = (studentId, courseKey) => {
   const student = getStudentById(studentId);
   const courses = getCourses();
-  
+
   if (!student) {
     throw new Error('Student not found');
   }
-  
+
   if (!courses[courseKey]) {
     throw new Error('Course not found');
   }
-  
+
   // Check if already enrolled
   if (student.enrolledCourses?.includes(courseKey)) {
     throw new Error('Already enrolled in this course');
   }
-  
+
   // Initialize enrolled courses array if it doesn't exist
   if (!student.enrolledCourses) {
     student.enrolledCourses = [];
   }
-  
+
   // Initialize progress tracking if it doesn't exist
   if (!student.progress) {
     student.progress = {};
   }
-  
+
   // Add course to enrolled courses
   student.enrolledCourses.push(courseKey);
-  
+
   // Initialize progress for this course
   student.progress[courseKey] = 0;
-  
+
   // Initialize enrolled courses date tracking
   if (!student.enrolledCoursesDate) {
     student.enrolledCoursesDate = {};
   }
   student.enrolledCoursesDate[courseKey] = new Date().toISOString();
-  
+
   // Update student
   updateStudent(student);
-  
+
   console.log(`✅ Student ${studentId} enrolled in course: ${courseKey}`);
   return true;
 };
 
 export const unenrollStudentFromCourse = (studentId, courseKey) => {
   const student = getStudentById(studentId);
-  
+
   if (!student) {
     throw new Error('Student not found');
   }
-  
+
   // Check if enrolled
   if (!student.enrolledCourses?.includes(courseKey)) {
     throw new Error('Not enrolled in this course');
   }
-  
+
   // Remove course from enrolled courses
   student.enrolledCourses = student.enrolledCourses.filter(course => course !== courseKey);
-  
+
   // Remove progress tracking for this course
   if (student.progress && student.progress[courseKey]) {
     delete student.progress[courseKey];
   }
-  
+
   // Remove from completed courses if present
   if (student.completedCourses?.includes(courseKey)) {
     student.completedCourses = student.completedCourses.filter(course => course !== courseKey);
   }
-  
+
   // Remove enrollment date
   if (student.enrolledCoursesDate && student.enrolledCoursesDate[courseKey]) {
     delete student.enrolledCoursesDate[courseKey];
   }
-  
+
   // Update student
   updateStudent(student);
-  
+
   console.log(`❌ Student ${studentId} unenrolled from course: ${courseKey}`);
   return true;
 };
@@ -326,11 +327,11 @@ export const unenrollStudentFromCourse = (studentId, courseKey) => {
 export const getEnrolledCoursesWithProgress = (studentId) => {
   const student = getStudentById(studentId);
   const courses = getCourses();
-  
+
   if (!student || !student.enrolledCourses) {
     return [];
   }
-  
+
   return student.enrolledCourses.map(courseKey => {
     const course = courses[courseKey];
     return {
@@ -345,23 +346,23 @@ export const getEnrolledCoursesWithProgress = (studentId) => {
 
 export const updateCourseProgress = (studentId, courseKey, progress) => {
   const student = getStudentById(studentId);
-  
+
   if (!student) {
     throw new Error('Student not found');
   }
-  
+
   if (!student.enrolledCourses?.includes(courseKey)) {
     throw new Error('Not enrolled in this course');
   }
-  
+
   // Initialize progress tracking if it doesn't exist
   if (!student.progress) {
     student.progress = {};
   }
-  
+
   // Update progress
   student.progress[courseKey] = Math.min(100, Math.max(0, progress));
-  
+
   // Check if course is completed
   if (progress >= 100) {
     if (!student.completedCourses) {
@@ -369,10 +370,10 @@ export const updateCourseProgress = (studentId, courseKey, progress) => {
     }
     if (!student.completedCourses.includes(courseKey)) {
       student.completedCourses.push(courseKey);
-      
+
       // Award points for course completion
       student.points = (student.points || 0) + 100;
-      
+
       // Add completion badge if not already present
       if (!student.badges) {
         student.badges = [];
@@ -382,32 +383,24 @@ export const updateCourseProgress = (studentId, courseKey, progress) => {
       }
     }
   }
-  
+
   updateStudent(student);
   return student.progress[courseKey];
 };
 
 export const getCourseCompletionStatus = (studentId, courseKey) => {
   const student = getStudentById(studentId);
-  
+
   if (!student) {
     return { enrolled: false, progress: 0, completed: false };
   }
-  
+
   return {
     enrolled: student.enrolledCourses?.includes(courseKey) || false,
     progress: student.progress?.[courseKey] || 0,
     completed: student.completedCourses?.includes(courseKey) || false
   };
 };
-
-
-
-
-
-
-
-
 
 // ==================== SESSION TRACKING & AUTO-LOGOUT ====================
 export const getSessionTracking = () => {
@@ -443,11 +436,11 @@ export const saveSessionTracking = (sessionData) => {
 export const updateLastActivity = () => {
   const sessionData = getSessionTracking();
   sessionData.lastActivity = new Date().toISOString();
-  
+
   if (!sessionData.sessionStart) {
     sessionData.sessionStart = new Date().toISOString();
   }
-  
+
   saveSessionTracking(sessionData);
   return sessionData;
 };
@@ -455,7 +448,7 @@ export const updateLastActivity = () => {
 export const getSessionDuration = () => {
   const sessionData = getSessionTracking();
   if (!sessionData.sessionStart) return 0;
-  
+
   const startTime = new Date(sessionData.sessionStart);
   const currentTime = new Date();
   return currentTime - startTime;
@@ -466,12 +459,12 @@ export const getTimeUntilLogout = () => {
   if (!sessionData.lastActivity || !sessionData.autoLogoutEnabled) {
     return null;
   }
-  
+
   const lastActivity = new Date(sessionData.lastActivity);
   const currentTime = new Date();
   const timeSinceActivity = currentTime - lastActivity;
   const timeRemaining = sessionData.logoutTimeout - timeSinceActivity;
-  
+
   return Math.max(0, timeRemaining);
 };
 
@@ -480,12 +473,12 @@ export const getTimeUntilWarning = () => {
   if (!sessionData.lastActivity || !sessionData.autoLogoutEnabled) {
     return null;
   }
-  
+
   const lastActivity = new Date(sessionData.lastActivity);
   const currentTime = new Date();
   const timeSinceActivity = currentTime - lastActivity;
   const timeRemaining = sessionData.warningTimeout - timeSinceActivity;
-  
+
   return Math.max(0, timeRemaining);
 };
 
@@ -532,7 +525,7 @@ export const getSessionStats = () => {
   const timeUntilLogout = getTimeUntilLogout();
   const timeUntilWarning = getTimeUntilWarning();
   const sessionDuration = getSessionDuration();
-  
+
   return {
     isActive: timeUntilLogout !== null && timeUntilLogout > 0,
     timeUntilLogout: timeUntilLogout,
@@ -571,7 +564,7 @@ export const generateEmailConfirmationToken = () => {
 export const createEmailConfirmation = (userId, email) => {
   const confirmations = getEmailConfirmations();
   const token = generateEmailConfirmationToken();
-  
+
   const confirmation = {
     userId,
     email,
@@ -580,10 +573,10 @@ export const createEmailConfirmation = (userId, email) => {
     expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(), // 24 hours
     isUsed: false
   };
-  
+
   confirmations[token] = confirmation;
   saveEmailConfirmations(confirmations);
-  
+
   console.log(`📧 Email confirmation created for user ${userId}`);
   return token;
 };
@@ -591,25 +584,25 @@ export const createEmailConfirmation = (userId, email) => {
 export const verifyEmailConfirmation = (token) => {
   const confirmations = getEmailConfirmations();
   const confirmation = confirmations[token];
-  
+
   if (!confirmation) {
     throw new Error('Invalid confirmation token');
   }
-  
+
   if (confirmation.isUsed) {
     throw new Error('Confirmation token already used');
   }
-  
+
   if (new Date(confirmation.expiresAt) < new Date()) {
     throw new Error('Confirmation token has expired');
   }
-  
+
   // Mark token as used
   confirmation.isUsed = true;
   confirmation.confirmedAt = new Date().toISOString();
   confirmations[token] = confirmation;
   saveEmailConfirmations(confirmations);
-  
+
   return confirmation;
 };
 
@@ -617,12 +610,12 @@ export const sendEmailConfirmation = (email, token) => {
   // In a real application, this would send an actual email
   // For demo purposes, we'll simulate the email sending and log the confirmation link
   const confirmationLink = `${window.location.origin}/confirm-email?token=${token}`;
-  
+
   console.log('📧 Email Confirmation Details:');
   console.log('To:', email);
   console.log('Confirmation Link:', confirmationLink);
   console.log('Token (for testing):', token);
-  
+
   // Simulate email sending
   return new Promise((resolve) => {
     setTimeout(() => {
@@ -653,7 +646,7 @@ export const saveUsers = (users) => {
 
 export const authenticateUser = (email, password) => {
   const users = getUsers();
-  
+
   console.log('🔐 Authentication Attempt:', { email });
   console.log('Available Users:', Object.values(users).map(u => ({ 
     email: u.email, 
@@ -661,35 +654,35 @@ export const authenticateUser = (email, password) => {
     isApproved: u.isApproved,
     isEmailConfirmed: u.isEmailConfirmed 
   })));
-  
+
   // Find user by email and password
   const user = Object.values(users).find(
     user => user.email === email && user.password === password
   );
-  
+
   console.log('Found User:', user);
-  
+
   if (user) {
     // Admin users don't need email confirmation
     if (user.role !== 'admin' && !user.isEmailConfirmed) {
       console.log('❌ Login blocked: Email not confirmed');
       throw new Error('Please confirm your email address before logging in. Check your inbox for the confirmation link.');
     }
-    
+
     // Check if user is a teacher and not approved
     if (user.role === 'teacher' && !user.isApproved) {
       console.log('❌ Teacher login blocked: Account not approved');
       throw new Error('Your teacher account is pending admin approval. Please wait for approval before logging in.');
     }
-    
+
     // Set current user and update session tracking
     setCurrentUser(user);
     resetSession(); // Reset session on login
-    
+
     console.log('✅ Login Successful:', user.role);
     return user;
   }
-  
+
   console.log('❌ Login Failed: No matching user found');
   return null;
 };
@@ -727,19 +720,19 @@ export const logoutUser = () => {
 // ==================== USER REGISTRATION ====================
 export const registerUser = (userData) => {
   const users = getUsers();
-  
+
   // Check if email already exists
   const existingUser = Object.values(users).find(
     user => user.email === userData.email
   );
-  
+
   if (existingUser) {
     throw new Error('Email already registered');
   }
-  
+
   // Generate unique user ID based on role
   const userId = `${userData.role}_${Date.now()}`;
-  
+
   const newUser = {
     id: userId,
     name: userData.name,
@@ -749,7 +742,7 @@ export const registerUser = (userData) => {
     isEmailConfirmed: false, // Email not confirmed initially
     joinedDate: new Date().toISOString()
   };
-  
+
   // Add role-specific fields
   if (userData.role === 'teacher') {
     newUser.specialization = userData.specialization || 'General';
@@ -764,7 +757,7 @@ export const registerUser = (userData) => {
     newUser.points = 0;
     newUser.badges = [];
     newUser.enrolledCourses = [];
-    
+
     // Also add to students array for backward compatibility
     const students = getStudents();
     const newStudentId = students.length > 0 ? Math.max(...students.map(s => s.id)) + 1 : 1;
@@ -786,15 +779,15 @@ export const registerUser = (userData) => {
     };
     saveStudents([...students, newStudent]);
   }
-  
+
   // Add to users
   users[userId] = newUser;
   saveUsers(users);
-  
+
   // Create and send email confirmation
   const confirmationToken = createEmailConfirmation(userId, userData.email);
   sendEmailConfirmation(userData.email, confirmationToken);
-  
+
   console.log('✅ New user registered (email confirmation sent):', userId);
   return { user: newUser, confirmationToken };
 };
@@ -804,15 +797,15 @@ export const confirmUserEmail = (token) => {
   try {
     const confirmation = verifyEmailConfirmation(token);
     const users = getUsers();
-    
+
     if (!users[confirmation.userId]) {
       throw new Error('User not found');
     }
-    
+
     // Update user email confirmation status
     users[confirmation.userId].isEmailConfirmed = true;
     users[confirmation.userId].emailConfirmedAt = new Date().toISOString();
-    
+
     // Also update in students array if it's a student
     if (users[confirmation.userId].role === 'student') {
       const students = getStudents();
@@ -823,9 +816,9 @@ export const confirmUserEmail = (token) => {
         saveStudents(students);
       }
     }
-    
+
     saveUsers(users);
-    
+
     console.log('✅ Email confirmed for user:', confirmation.userId);
     return users[confirmation.userId];
   } catch (error) {
@@ -837,19 +830,19 @@ export const confirmUserEmail = (token) => {
 export const resendEmailConfirmation = (email) => {
   const users = getUsers();
   const user = Object.values(users).find(u => u.email === email);
-  
+
   if (!user) {
     throw new Error('User not found with this email');
   }
-  
+
   if (user.isEmailConfirmed) {
     throw new Error('Email is already confirmed');
   }
-  
+
   // Create and send new email confirmation
   const confirmationToken = createEmailConfirmation(user.id, email);
   sendEmailConfirmation(email, confirmationToken);
-  
+
   console.log('✅ Confirmation email resent to:', email);
   return { success: true, message: 'Confirmation email sent successfully' };
 };
@@ -879,14 +872,14 @@ export const getApprovedTeachers = () => {
 
 export const approveTeacher = (teacherId) => {
   const users = getUsers();
-  
+
   if (!users[teacherId] || users[teacherId].role !== 'teacher') {
     throw new Error('Teacher not found');
   }
-  
+
   users[teacherId].isApproved = true;
   users[teacherId].approvedDate = new Date().toISOString();
-  
+
   saveUsers(users);
   console.log('✅ Teacher approved:', teacherId);
   return users[teacherId];
@@ -894,30 +887,30 @@ export const approveTeacher = (teacherId) => {
 
 export const rejectTeacher = (teacherId) => {
   const users = getUsers();
-  
+
   if (!users[teacherId] || users[teacherId].role !== 'teacher') {
     throw new Error('Teacher not found');
   }
-  
+
   // Remove teacher from users
   delete users[teacherId];
   saveUsers(users);
-  
+
   console.log('❌ Teacher rejected and removed:', teacherId);
   return true;
 };
 
 export const dismissTeacher = (teacherId) => {
   const users = getUsers();
-  
+
   if (!users[teacherId] || users[teacherId].role !== 'teacher') {
     throw new Error('Teacher not found');
   }
-  
+
   // Set teacher as not approved and add dismissal date
   users[teacherId].isApproved = false;
   users[teacherId].dismissedDate = new Date().toISOString();
-  
+
   saveUsers(users);
   console.log('🚫 Teacher dismissed:', teacherId);
   return users[teacherId];
@@ -925,17 +918,17 @@ export const dismissTeacher = (teacherId) => {
 
 export const updateTeacherProfile = (teacherId, profileData) => {
   const users = getUsers();
-  
+
   if (!users[teacherId] || users[teacherId].role !== 'teacher') {
     throw new Error('Teacher not found');
   }
-  
+
   users[teacherId] = {
     ...users[teacherId],
     ...profileData,
     updatedAt: new Date().toISOString()
   };
-  
+
   saveUsers(users);
   return users[teacherId];
 };
@@ -943,11 +936,11 @@ export const updateTeacherProfile = (teacherId, profileData) => {
 export const getTeacherById = (teacherId) => {
   const users = getUsers();
   const teacher = users[teacherId];
-  
+
   if (!teacher || teacher.role !== 'teacher') {
     return null;
   }
-  
+
   return teacher;
 };
 
@@ -955,7 +948,7 @@ export const getTeacherById = (teacherId) => {
 export const deleteUser = (userId) => {
   const users = getUsers();
   const currentUser = getCurrentUser();
-  
+
   if (!users[userId]) {
     throw new Error('User not found');
   }
@@ -987,7 +980,7 @@ export const deleteUser = (userId) => {
 
 export const updateUser = (userId, userData) => {
   const users = getUsers();
-  
+
   if (!users[userId]) {
     throw new Error('User not found');
   }
@@ -1016,12 +1009,12 @@ export const getUserById = (userId) => {
 export const getTeacherCourses = () => {
   const courses = getCourses();
   const teacherId = getCurrentTeacherId();
-  
+
   if (!teacherId) {
     console.log('No teacher ID found, returning all courses for demo');
     return courses;
   }
-  
+
   return Object.fromEntries(
     Object.entries(courses).filter(([key, course]) => course.teacherId === teacherId)
   );
@@ -1030,12 +1023,12 @@ export const getTeacherCourses = () => {
 export const getTeacherStats = () => {
   const teacherCourses = getTeacherCourses();
   const allStudents = getStudents();
-  
+
   const totalCourses = Object.keys(teacherCourses).length;
   const totalLessons = Object.values(teacherCourses).reduce(
     (acc, course) => acc + (course.lessons?.length || 0), 0
   );
-  
+
   // Calculate students enrolled in teacher's courses
   const teacherCourseKeys = Object.keys(teacherCourses);
   const totalStudents = allStudents.filter(student => 
@@ -1047,7 +1040,7 @@ export const getTeacherStats = () => {
   // Calculate completion rate
   let totalCompletions = 0;
   let totalPossibleCompletions = 0;
-  
+
   allStudents.forEach(student => {
     teacherCourseKeys.forEach(courseKey => {
       if (student.enrolledCourses?.includes(courseKey)) {
@@ -1058,7 +1051,7 @@ export const getTeacherStats = () => {
       }
     });
   });
-  
+
   const averageCompletionRate = totalPossibleCompletions > 0 
     ? Math.round((totalCompletions / totalPossibleCompletions) * 100)
     : 0;
@@ -1094,13 +1087,13 @@ export const getCurrentTeacherId = () => {
 export const addNewCourse = (courseData) => {
   const courses = getCourses();
   const courseKey = courseData.key || generateCourseKey(courseData.title);
-  
+
   if (courses[courseKey]) {
     throw new Error('Course with this key already exists');
   }
 
   const teacherId = getCurrentTeacherId();
-  
+
   courses[courseKey] = {
     ...courseData,
     key: courseKey,
@@ -1117,19 +1110,19 @@ export const addNewCourse = (courseData) => {
 export const addNewCourseWithTeacher = (courseData, teacherId) => {
   const courses = getCourses();
   const users = getUsers();
-  
+
   const courseKey = courseData.key || generateCourseKey(courseData.title);
-  
+
   if (courses[courseKey]) {
     throw new Error('Course with this key already exists');
   }
-  
+
   // Verify teacher exists and is approved
   const teacher = users[teacherId];
   if (!teacher || teacher.role !== 'teacher' || !teacher.isApproved) {
     throw new Error('Teacher not found or not approved');
   }
-  
+
   // Create course
   courses[courseKey] = {
     ...courseData,
@@ -1141,30 +1134,30 @@ export const addNewCourseWithTeacher = (courseData, teacherId) => {
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString()
   };
-  
+
   // Add course to teacher's courses array
   if (!teacher.courses) {
     teacher.courses = [];
   }
   teacher.courses.push(courseKey);
   users[teacherId] = teacher;
-  
+
   saveCourses(courses);
   saveUsers(users);
-  
+
   return courseKey;
 };
 
 export const approveCourse = (courseKey) => {
   const courses = getCourses();
-  
+
   if (!courses[courseKey]) {
     throw new Error('Course not found');
   }
-  
+
   courses[courseKey].isPublished = true;
   courses[courseKey].approvedDate = new Date().toISOString();
-  
+
   saveCourses(courses);
   return courses[courseKey];
 };
@@ -1214,7 +1207,7 @@ export const addStudent = (newStudent) => {
     id: newId, 
     joinedDate: new Date().toISOString() 
   };
-  
+
   const updatedStudents = [...students, studentWithId];
   saveStudents(updatedStudents);
   return studentWithId;
@@ -1255,7 +1248,7 @@ export const updateStudentProgress = (studentId, courseKey, progress, completedL
   if (completedLessonId && !updatedStudent.completedLessons.includes(completedLessonId)) {
     updatedStudent.completedLessons = [...updatedStudent.completedLessons, completedLessonId];
     updatedStudent.points = (updatedStudent.points || 0) + 10;
-    
+
     if (updatedStudent.completedLessons.length >= 5) {
       if (!updatedStudent.badges) updatedStudent.badges = [];
       if (!updatedStudent.badges.includes('Fast Learner')) {
@@ -1270,41 +1263,41 @@ export const updateStudentProgress = (studentId, courseKey, progress, completedL
 export const addLessonToCourse = (courseKey, lessonData) => {
   const courses = getCourses();
   const course = courses[courseKey];
-  
+
   if (!course) {
     throw new Error('Course not found');
   }
-  
+
   const newLessonId = course.lessons.length > 0 
     ? Math.max(...course.lessons.map(l => l.id)) + 1 
     : 1;
-  
+
   const newLesson = {
     id: newLessonId,
     ...lessonData
   };
-  
+
   const updatedCourse = {
     ...course,
     lessons: [...course.lessons, newLesson]
   };
-  
+
   const updatedCourses = {
     ...courses,
     [courseKey]: updatedCourse
   };
-  
+
   saveCourses(updatedCourses);
   return newLesson;
 };
 
 export const updateCourse = (courseKey, courseData) => {
   const courses = getCourses();
-  
+
   if (!courses[courseKey]) {
     throw new Error('Course not found');
   }
-  
+
   const updatedCourses = {
     ...courses,
     [courseKey]: { 
@@ -1313,7 +1306,7 @@ export const updateCourse = (courseKey, courseData) => {
       updatedAt: new Date().toISOString()
     }
   };
-  
+
   saveCourses(updatedCourses);
   return updatedCourses[courseKey];
 };
@@ -1323,7 +1316,7 @@ export const deleteCourse = (courseKey) => {
   if (!courses[courseKey]) {
     throw new Error('Course not found');
   }
-  
+
   const updatedCourses = { ...courses };
   delete updatedCourses[courseKey];
   saveCourses(updatedCourses);
@@ -1334,25 +1327,25 @@ export const deleteCourse = (courseKey) => {
 export const updateLesson = (courseKey, lessonId, lessonData) => {
   const courses = getCourses();
   const course = courses[courseKey];
-  
+
   if (!course) {
     throw new Error('Course not found');
   }
-  
+
   const updatedLessons = course.lessons.map(lesson =>
     lesson.id === lessonId ? { ...lesson, ...lessonData } : lesson
   );
-  
+
   const updatedCourse = {
     ...course,
     lessons: updatedLessons
   };
-  
+
   const updatedCourses = {
     ...courses,
     [courseKey]: updatedCourse
   };
-  
+
   saveCourses(updatedCourses);
   return updatedCourse;
 };
@@ -1360,57 +1353,140 @@ export const updateLesson = (courseKey, lessonId, lessonData) => {
 export const deleteLesson = (courseKey, lessonId) => {
   const courses = getCourses();
   const course = courses[courseKey];
-  
+
   if (!course) {
     throw new Error('Course not found');
   }
-  
+
   const updatedLessons = course.lessons.filter(lesson => lesson.id !== lessonId);
-  
+
   const updatedCourse = {
     ...course,
     lessons: updatedLessons
   };
-  
+
   const updatedCourses = {
     ...courses,
     [courseKey]: updatedCourse
   };
-  
+
   saveCourses(updatedCourses);
   return updatedCourse;
+};
+
+// ==================== LESSON LOCK MANAGEMENT ====================
+export const toggleLessonLock = (courseKey, lessonId, isLocked) => {
+  try {
+    const courses = getCourses();
+    if (!courses[courseKey]) {
+      throw new Error('Course not found');
+    }
+
+    const course = courses[courseKey];
+    const lessonIndex = course.lessons.findIndex(lesson => lesson.id === lessonId);
+    
+    if (lessonIndex === -1) {
+      throw new Error('Lesson not found');
+    }
+
+    // Update the lesson's lock status
+    course.lessons[lessonIndex].isLocked = isLocked;
+    
+    // Save the updated courses back to storage
+    localStorage.setItem(COURSES_KEY, JSON.stringify(courses));
+    
+    console.log(`✅ Lesson ${lessonId} in course ${courseKey} ${isLocked ? 'locked' : 'unlocked'}`);
+    return true;
+  } catch (error) {
+    console.error('Error toggling lesson lock:', error);
+    throw error;
+  }
+};
+
+export const getLockedLessonsCount = (courseKey) => {
+  const courses = getCourses();
+  const course = courses[courseKey];
+  
+  if (!course || !course.lessons) {
+    return 0;
+  }
+  
+  return course.lessons.filter(lesson => lesson.isLocked).length;
+};
+
+export const getLockedLessonsForStudent = (studentId, courseKey) => {
+  const student = getStudentById(studentId);
+  const courses = getCourses();
+  const course = courses[courseKey];
+  
+  if (!student || !course) {
+    return [];
+  }
+  
+  return course.lessons
+    .filter(lesson => lesson.isLocked)
+    .map(lesson => ({
+      courseKey,
+      lessonId: lesson.id,
+      lessonTitle: lesson.title,
+      isLocked: true
+    }));
+};
+
+export const isLessonAccessible = (studentId, courseKey, lessonId) => {
+  const student = getStudentById(studentId);
+  const courses = getCourses();
+  const course = courses[courseKey];
+  
+  if (!student || !course) {
+    return false;
+  }
+  
+  const lesson = course.lessons.find(l => l.id === lessonId);
+  if (!lesson) {
+    return false;
+  }
+  
+  // If lesson is not locked, it's accessible
+  if (!lesson.isLocked) {
+    return true;
+  }
+  
+  // Check if student has access to locked content (you can add payment logic here)
+  // For now, we'll assume locked lessons are not accessible
+  return false;
 };
 
 // ==================== MULTIMEDIA MANAGEMENT ====================
 export const addMultimediaToLesson = (courseKey, lessonId, multimediaItem) => {
   const courses = getCourses();
   const course = courses[courseKey];
-  
+
   if (!course) {
     throw new Error('Course not found');
   }
-  
+
   const lesson = course.lessons.find(l => l.id === lessonId);
   if (!lesson) {
     throw new Error('Lesson not found');
   }
-  
+
   if (!lesson.multimedia) {
     lesson.multimedia = [];
   }
-  
+
   const newMultimediaItem = {
     id: lesson.multimedia.length > 0 ? Math.max(...lesson.multimedia.map(m => m.id)) + 1 : 1,
     ...multimediaItem
   };
-  
+
   lesson.multimedia.push(newMultimediaItem);
-  
+
   const updatedCourses = {
     ...courses,
     [courseKey]: course
   };
-  
+
   saveCourses(updatedCourses);
   return newMultimediaItem;
 };
@@ -1418,27 +1494,27 @@ export const addMultimediaToLesson = (courseKey, lessonId, multimediaItem) => {
 export const updateMultimediaInLesson = (courseKey, lessonId, multimediaId, multimediaData) => {
   const courses = getCourses();
   const course = courses[courseKey];
-  
+
   if (!course) {
     throw new Error('Course not found');
   }
-  
+
   const lesson = course.lessons.find(l => l.id === lessonId);
   if (!lesson || !lesson.multimedia) {
     throw new Error('Lesson or multimedia not found');
   }
-  
+
   const updatedMultimedia = lesson.multimedia.map(item =>
     item.id === multimediaId ? { ...item, ...multimediaData } : item
   );
-  
+
   lesson.multimedia = updatedMultimedia;
-  
+
   const updatedCourses = {
     ...courses,
     [courseKey]: course
   };
-  
+
   saveCourses(updatedCourses);
   return updatedMultimedia.find(item => item.id === multimediaId);
 };
@@ -1446,23 +1522,23 @@ export const updateMultimediaInLesson = (courseKey, lessonId, multimediaId, mult
 export const deleteMultimediaFromLesson = (courseKey, lessonId, multimediaId) => {
   const courses = getCourses();
   const course = courses[courseKey];
-  
+
   if (!course) {
     throw new Error('Course not found');
   }
-  
+
   const lesson = course.lessons.find(l => l.id === lessonId);
   if (!lesson || !lesson.multimedia) {
     throw new Error('Lesson or multimedia not found');
   }
-  
+
   lesson.multimedia = lesson.multimedia.filter(item => item.id !== multimediaId);
-  
+
   const updatedCourses = {
     ...courses,
     [courseKey]: course
   };
-  
+
   saveCourses(updatedCourses);
   return true;
 };
@@ -1475,15 +1551,15 @@ export const getAllCoursesForAdmin = () => {
 export const getCourseDetailsForAdmin = (courseKey) => {
   const courses = getCourses();
   const course = courses[courseKey];
-  
+
   if (!course) {
     throw new Error('Course not found');
   }
-  
+
   // Get teacher information
   const users = getUsers();
   const teacher = users[course.teacherId];
-  
+
   return {
     ...course,
     teacherInfo: teacher ? {
@@ -1497,11 +1573,11 @@ export const getCourseDetailsForAdmin = (courseKey) => {
 
 export const deleteCourseAsAdmin = (courseKey) => {
   const courses = getCourses();
-  
+
   if (!courses[courseKey]) {
     throw new Error('Course not found');
   }
-  
+
   // Remove course from teacher's courses array if teacher exists
   const teacherId = courses[courseKey].teacherId;
   if (teacherId) {
@@ -1512,7 +1588,7 @@ export const deleteCourseAsAdmin = (courseKey) => {
       saveUsers(users);
     }
   }
-  
+
   // Remove course from enrolled students
   const students = getStudents();
   const updatedStudents = students.map(student => ({
@@ -1524,12 +1600,12 @@ export const deleteCourseAsAdmin = (courseKey) => {
     )
   }));
   saveStudents(updatedStudents);
-  
+
   // Delete the course
   const updatedCourses = { ...courses };
   delete updatedCourses[courseKey];
   saveCourses(updatedCourses);
-  
+
   console.log(`🗑 Admin deleted course: ${courseKey}`);
   return true;
 };
@@ -1537,16 +1613,16 @@ export const deleteCourseAsAdmin = (courseKey) => {
 export const deleteLessonAsAdmin = (courseKey, lessonId) => {
   const courses = getCourses();
   const course = courses[courseKey];
-  
+
   if (!course) {
     throw new Error('Course not found');
   }
-  
+
   const lesson = course.lessons.find(l => l.id === lessonId);
   if (!lesson) {
     throw new Error('Lesson not found');
   }
-  
+
   // Remove lesson from students' completed lessons
   const students = getStudents();
   const updatedStudents = students.map(student => ({
@@ -1556,21 +1632,21 @@ export const deleteLessonAsAdmin = (courseKey, lessonId) => {
     ) || []
   }));
   saveStudents(updatedStudents);
-  
+
   // Delete the lesson
   const updatedLessons = course.lessons.filter(lesson => lesson.id !== lessonId);
   const updatedCourse = {
     ...course,
     lessons: updatedLessons
   };
-  
+
   const updatedCourses = {
     ...courses,
     [courseKey]: updatedCourse
   };
-  
+
   saveCourses(updatedCourses);
-  
+
   console.log(`🗑 Admin deleted lesson ${lessonId} from course: ${courseKey}`);
   return true;
 };
@@ -1580,7 +1656,7 @@ export const getTeacherCoursesForAdmin = (teacherId) => {
   const teacherCourses = Object.fromEntries(
     Object.entries(courses).filter(([key, course]) => course.teacherId === teacherId)
   );
-  
+
   return teacherCourses;
 };
 
@@ -1589,19 +1665,19 @@ export const getCourseAnalyticsForAdmin = (courseKey) => {
   if (!course) {
     throw new Error('Course not found');
   }
-  
+
   const students = getStudents();
   const enrolledStudents = students.filter(student => 
     student.enrolledCourses?.includes(courseKey)
   );
-  
+
   const completedStudents = students.filter(student => 
     student.completedCourses?.includes(courseKey)
   );
-  
+
   let totalLessonCompletions = 0;
   let totalPossibleCompletions = 0;
-  
+
   enrolledStudents.forEach(student => {
     course.lessons.forEach(lesson => {
       totalPossibleCompletions++;
@@ -1610,16 +1686,16 @@ export const getCourseAnalyticsForAdmin = (courseKey) => {
       }
     });
   });
-  
+
   const averageCompletionRate = totalPossibleCompletions > 0 
     ? Math.round((totalLessonCompletions / totalPossibleCompletions) * 100)
     : 0;
-  
+
   // Quiz analytics
   let totalQuizAttempts = 0;
   let passedQuizAttempts = 0;
   let totalQuizScore = 0;
-  
+
   enrolledStudents.forEach(student => {
     if (student.quizResults) {
       student.quizResults.forEach(result => {
@@ -1633,10 +1709,10 @@ export const getCourseAnalyticsForAdmin = (courseKey) => {
       });
     }
   });
-  
+
   const averageQuizScore = totalQuizAttempts > 0 ? Math.round(totalQuizScore / totalQuizAttempts) : 0;
   const quizPassRate = totalQuizAttempts > 0 ? Math.round((passedQuizAttempts / totalQuizAttempts) * 100) : 0;
-  
+
   return {
     courseKey,
     courseTitle: course.title,
@@ -1662,22 +1738,22 @@ export const getCourseAnalyticsForAdmin = (courseKey) => {
 export const getAllCoursesAnalyticsForAdmin = () => {
   const courses = getCourses();
   const analytics = [];
-  
+
   Object.entries(courses).forEach(([courseKey, course]) => {
     const courseAnalytics = getCourseAnalyticsForAdmin(courseKey);
     analytics.push(courseAnalytics);
   });
-  
+
   return analytics.sort((a, b) => b.totalEnrolled - a.totalEnrolled);
 };
 
 export const updateCourseAsAdmin = (courseKey, courseData) => {
   const courses = getCourses();
-  
+
   if (!courses[courseKey]) {
     throw new Error('Course not found');
   }
-  
+
   const updatedCourses = {
     ...courses,
     [courseKey]: { 
@@ -1687,7 +1763,7 @@ export const updateCourseAsAdmin = (courseKey, courseData) => {
       lastUpdatedBy: 'admin'
     }
   };
-  
+
   saveCourses(updatedCourses);
   return updatedCourses[courseKey];
 };
@@ -1695,11 +1771,11 @@ export const updateCourseAsAdmin = (courseKey, courseData) => {
 export const updateLessonAsAdmin = (courseKey, lessonId, lessonData) => {
   const courses = getCourses();
   const course = courses[courseKey];
-  
+
   if (!course) {
     throw new Error('Course not found');
   }
-  
+
   const updatedLessons = course.lessons.map(lesson =>
     lesson.id === lessonId ? { 
       ...lesson, 
@@ -1707,17 +1783,17 @@ export const updateLessonAsAdmin = (courseKey, lessonId, lessonData) => {
       lastUpdatedBy: 'admin'
     } : lesson
   );
-  
+
   const updatedCourse = {
     ...course,
     lessons: updatedLessons
   };
-  
+
   const updatedCourses = {
     ...courses,
     [courseKey]: updatedCourse
   };
-  
+
   saveCourses(updatedCourses);
   return updatedCourse;
 };
@@ -1726,7 +1802,7 @@ export const updateLessonAsAdmin = (courseKey, lessonId, lessonData) => {
 export const getTeacherCoursesWithDetails = (teacherId) => {
   const teacherCourses = getTeacherCoursesForAdmin(teacherId);
   const coursesWithDetails = {};
-  
+
   Object.entries(teacherCourses).forEach(([courseKey, course]) => {
     const analytics = getCourseAnalyticsForAdmin(courseKey);
     coursesWithDetails[courseKey] = {
@@ -1734,7 +1810,7 @@ export const getTeacherCoursesWithDetails = (teacherId) => {
       analytics
     };
   });
-  
+
   return coursesWithDetails;
 };
 
@@ -1743,21 +1819,21 @@ export const getUnapprovedCourses = () => {
   const unapprovedCourses = Object.fromEntries(
     Object.entries(courses).filter(([key, course]) => !course.isPublished)
   );
-  
+
   return unapprovedCourses;
 };
 
 export const approveCourseAsAdmin = (courseKey) => {
   const courses = getCourses();
-  
+
   if (!courses[courseKey]) {
     throw new Error('Course not found');
   }
-  
+
   courses[courseKey].isPublished = true;
   courses[courseKey].approvedDate = new Date().toISOString();
   courses[courseKey].approvedBy = 'admin';
-  
+
   saveCourses(courses);
   console.log(`✅ Admin approved course: ${courseKey}`);
   return courses[courseKey];
@@ -1765,18 +1841,18 @@ export const approveCourseAsAdmin = (courseKey) => {
 
 export const rejectCourseAsAdmin = (courseKey) => {
   const courses = getCourses();
-  
+
   if (!courses[courseKey]) {
     throw new Error('Course not found');
   }
-  
+
   // You can either delete the course or mark it as rejected
   // Here we'll mark it as rejected but keep it for review
   courses[courseKey].isPublished = false;
   courses[courseKey].rejectedDate = new Date().toISOString();
   courses[courseKey].rejectedBy = 'admin';
   courses[courseKey].rejectionReason = 'Rejected by admin';
-  
+
   saveCourses(courses);
   console.log(`❌ Admin rejected course: ${courseKey}`);
   return courses[courseKey];
@@ -1790,7 +1866,7 @@ export const getPlatformStats = () => {
   const approvedTeachers = getApprovedTeachers();
   const pendingTeachers = getPendingTeachers();
   const users = getAllUsers();
-  
+
   const totalStudents = students.length;
   const totalTeachers = teachers.length;
   const totalApprovedTeachers = approvedTeachers.length;
@@ -1802,7 +1878,7 @@ export const getPlatformStats = () => {
   const totalCompletedLessons = students.reduce((total, student) => 
     total + student.completedLessons.length, 0
   );
-  
+
   const recentStudents = students
     .sort((a, b) => new Date(b.joinedDate) - new Date(a.joinedDate))
     .slice(0, 5);
@@ -1835,11 +1911,11 @@ export const generateCertificate = (studentId, courseKey, completionDate, certif
   const student = getStudentById(studentId);
   const courses = getCourses();
   const course = courses[courseKey];
-  
+
   if (!student || !course) {
     throw new Error('Student or course not found');
   }
-  
+
   const certificate = {
     id: certificateId || `cert_${Date.now()}`,
     studentId: student.id,
@@ -1851,14 +1927,14 @@ export const generateCertificate = (studentId, courseKey, completionDate, certif
     certificateUrl: null,
     verificationCode: generateVerificationCode()
   };
-  
+
   if (!student.certificates) {
     student.certificates = [];
   }
   student.certificates.push(certificate);
-  
+
   updateStudent(student);
-  
+
   return certificate;
 };
 
@@ -1883,11 +1959,11 @@ export const verifyCertificate = (certificateId, verificationCode) => {
   if (!certificate) {
     return { valid: false, message: 'Certificate not found' };
   }
-  
+
   if (certificate.verificationCode !== verificationCode) {
     return { valid: false, message: 'Invalid verification code' };
   }
-  
+
   return { 
     valid: true, 
     message: 'Certificate verified successfully',
@@ -1899,11 +1975,11 @@ export const checkCertificateEligibility = (studentId, courseKey) => {
   const student = getStudentById(studentId);
   const courses = getCourses();
   const course = courses[courseKey];
-  
+
   if (!student || !course) {
     return { eligible: false, reason: 'Student or course not found' };
   }
-  
+
   if (student.progress[courseKey] < 100) {
     return { 
       eligible: false, 
@@ -1911,11 +1987,11 @@ export const checkCertificateEligibility = (studentId, courseKey) => {
       progress: student.progress[courseKey] 
     };
   }
-  
+
   const existingCert = student.certificates?.find(cert => 
     cert.courseKey === courseKey
   );
-  
+
   if (existingCert) {
     return { 
       eligible: false, 
@@ -1923,7 +1999,7 @@ export const checkCertificateEligibility = (studentId, courseKey) => {
       certificate: existingCert 
     };
   }
-  
+
   return { eligible: true, reason: 'Eligible for certificate' };
 };
 
@@ -1935,16 +2011,16 @@ const generateVerificationCode = () => {
 export const addQuizToLesson = (courseKey, lessonId, quizData) => {
   const courses = getCourses();
   const course = courses[courseKey];
-  
+
   if (!course) {
     throw new Error('Course not found');
   }
-  
+
   const lesson = course.lessons.find(l => l.id === lessonId);
   if (!lesson) {
     throw new Error('Lesson not found');
   }
-  
+
   // Generate unique IDs for questions if not provided
   const quizWithIds = {
     ...quizData,
@@ -1953,14 +2029,14 @@ export const addQuizToLesson = (courseKey, lessonId, quizData) => {
       ...q
     }))
   };
-  
+
   lesson.quiz = quizWithIds;
-  
+
   const updatedCourses = {
     ...courses,
     [courseKey]: course
   };
-  
+
   saveCourses(updatedCourses);
   return quizWithIds;
 };
@@ -1968,23 +2044,23 @@ export const addQuizToLesson = (courseKey, lessonId, quizData) => {
 export const updateQuizInLesson = (courseKey, lessonId, quizData) => {
   const courses = getCourses();
   const course = courses[courseKey];
-  
+
   if (!course) {
     throw new Error('Course not found');
   }
-  
+
   const lesson = course.lessons.find(l => l.id === lessonId);
   if (!lesson || !lesson.quiz) {
     throw new Error('Lesson or quiz not found');
   }
-  
+
   lesson.quiz = { ...lesson.quiz, ...quizData };
-  
+
   const updatedCourses = {
     ...courses,
     [courseKey]: course
   };
-  
+
   saveCourses(updatedCourses);
   return lesson.quiz;
 };
@@ -1992,23 +2068,23 @@ export const updateQuizInLesson = (courseKey, lessonId, quizData) => {
 export const deleteQuizFromLesson = (courseKey, lessonId) => {
   const courses = getCourses();
   const course = courses[courseKey];
-  
+
   if (!course) {
     throw new Error('Course not found');
   }
-  
+
   const lesson = course.lessons.find(l => l.id === lessonId);
   if (!lesson) {
     throw new Error('Lesson not found');
   }
-  
+
   lesson.quiz = null;
-  
+
   const updatedCourses = {
     ...courses,
     [courseKey]: course
   };
-  
+
   saveCourses(updatedCourses);
   return true;
 };
@@ -2016,7 +2092,7 @@ export const deleteQuizFromLesson = (courseKey, lessonId) => {
 export const getQuizResults = (studentId, courseKey, lessonId) => {
   const student = getStudentById(studentId);
   if (!student || !student.quizResults) return null;
-  
+
   return student.quizResults.find(result => 
     result.courseKey === courseKey && result.lessonId === lessonId
   );
@@ -2061,12 +2137,12 @@ export const saveQuizResult = (studentId, courseKey, lessonId, score, passed, to
 export const getQuizAnalytics = () => {
   const students = getStudents();
   const courses = getCourses();
-  
+
   let totalQuizzes = 0;
   let totalAttempts = 0;
   let passedAttempts = 0;
   let averageScore = 0;
-  
+
   // Calculate quiz statistics
   students.forEach(student => {
     if (student.quizResults) {
@@ -2079,7 +2155,7 @@ export const getQuizAnalytics = () => {
       });
     }
   });
-  
+
   // Count total quizzes available
   Object.values(courses).forEach(course => {
     course.lessons.forEach(lesson => {
@@ -2088,9 +2164,9 @@ export const getQuizAnalytics = () => {
       }
     });
   });
-  
+
   averageScore = totalAttempts > 0 ? averageScore / totalAttempts : 0;
-  
+
   return {
     totalQuizzes,
     totalAttempts,
@@ -2104,13 +2180,13 @@ export const getQuizAnalytics = () => {
 export const getStudentQuizProgress = (studentId) => {
   const student = getStudentById(studentId);
   const courses = getCourses();
-  
+
   if (!student) return null;
-  
+
   let totalQuizzes = 0;
   let completedQuizzes = 0;
   let averageQuizScore = 0;
-  
+
   // Count total quizzes and completed quizzes
   Object.entries(courses).forEach(([courseKey, course]) => {
     course.lessons.forEach(lesson => {
@@ -2126,9 +2202,9 @@ export const getStudentQuizProgress = (studentId) => {
       }
     });
   });
-  
+
   averageQuizScore = completedQuizzes > 0 ? averageQuizScore / completedQuizzes : 0;
-  
+
   return {
     totalQuizzes,
     completedQuizzes,
@@ -2147,7 +2223,7 @@ export const getCourseByKey = (courseKey) => {
 export const getLessonById = (courseKey, lessonId) => {
   const course = getCourseByKey(courseKey);
   if (!course) return null;
-  
+
   return course.lessons.find(lesson => lesson.id === lessonId) || null;
 };
 
@@ -2161,7 +2237,7 @@ export const getTotalLessons = () => {
 export const getLessonsWithQuizzes = () => {
   const courses = getCourses();
   const lessonsWithQuizzes = [];
-  
+
   Object.entries(courses).forEach(([courseKey, course]) => {
     course.lessons.forEach(lesson => {
       if (lesson.quiz) {
@@ -2175,7 +2251,7 @@ export const getLessonsWithQuizzes = () => {
       }
     });
   });
-  
+
   return lessonsWithQuizzes;
 };
 
@@ -2190,22 +2266,22 @@ export const exportData = () => {
     exportDate: new Date().toISOString(),
     version: '1.0'
   };
-  
+
   // Create a downloadable JSON file
   const dataStr = JSON.stringify(data, null, 2);
   const dataBlob = new Blob([dataStr], { type: 'application/json' });
-  
+
   return URL.createObjectURL(dataBlob);
 };
 
 export const importData = (jsonData) => {
   try {
     const data = JSON.parse(jsonData);
-    
+
     if (data.students && Array.isArray(data.students)) {
       saveStudents(data.students);
     }
-    
+
     if (data.courses && typeof data.courses === 'object') {
       saveCourses(data.courses);
     }
@@ -2221,7 +2297,7 @@ export const importData = (jsonData) => {
     if (data.emailConfirmations && typeof data.emailConfirmations === 'object') {
       saveEmailConfirmations(data.emailConfirmations);
     }
-    
+
     return true;
   } catch (error) {
     console.error('Error importing data:', error);
@@ -2247,30 +2323,30 @@ export const resetAllData = () => {
 export const calculateOverallProgress = (studentId) => {
   const student = getStudentById(studentId);
   const courses = getCourses();
-  
+
   if (!student) return 0;
-  
+
   let totalLessons = 0;
   let completedLessons = 0;
-  
+
   Object.entries(courses).forEach(([courseKey, course]) => {
     totalLessons += course.lessons.length;
     completedLessons += course.lessons.filter(lesson => 
       student.completedLessons.includes(`${courseKey}-${lesson.id}`)
     ).length;
   });
-  
+
   return totalLessons > 0 ? Math.round((completedLessons / totalLessons) * 100) : 0;
 };
 
 export const getStudentActivity = (studentId, days = 30) => {
   const student = getStudentById(studentId);
   if (!student) return [];
-  
+
   const activities = [];
   const cutoffDate = new Date();
   cutoffDate.setDate(cutoffDate.getDate() - days);
-  
+
   // Add lesson completions
   student.completedLessons.forEach(lessonKey => {
     // You might want to store completion dates separately for better tracking
@@ -2281,7 +2357,7 @@ export const getStudentActivity = (studentId, days = 30) => {
       description: 'Completed a lesson'
     });
   });
-  
+
   // Add quiz attempts
   if (student.quizResults) {
     student.quizResults.forEach(result => {
@@ -2296,7 +2372,7 @@ export const getStudentActivity = (studentId, days = 30) => {
       });
     });
   }
-  
+
   return activities
     .filter(activity => new Date(activity.date) >= cutoffDate)
     .sort((a, b) => new Date(b.date) - new Date(a.date));
@@ -2305,24 +2381,24 @@ export const getStudentActivity = (studentId, days = 30) => {
 // ==================== DEBUG FUNCTIONS ====================
 export const debugStorage = () => {
   console.log('=== STORAGE DEBUG INFO ===');
-  
+
   const users = getUsers();
   const currentUser = getCurrentUser();
   const students = getStudents();
   const courses = getCourses();
   const sessionTracking = getSessionTracking();
-  
+
   console.log('All Users:', users);
   console.log('Current User:', currentUser);
   console.log('Students:', students);
   console.log('Courses:', courses);
   console.log('Session Tracking:', sessionTracking);
-  
+
   // Check specific users
   console.log('Admin User (admin1):', users['admin1']);
   console.log('Teacher User (teacher1):', users['teacher1']);
   console.log('Student User (student1):', users['student1']);
-  
+
   console.log('=== END DEBUG INFO ===');
 };
 
@@ -2396,6 +2472,11 @@ export default {
   updateLesson,
   deleteLesson,
   getLessonById,
+  // Lesson lock management
+  toggleLessonLock,
+  getLockedLessonsCount,
+  getLockedLessonsForStudent,
+  isLessonAccessible,
   // Multimedia management
   addMultimediaToLesson,
   updateMultimediaInLesson,
@@ -2432,6 +2513,12 @@ export default {
   saveQuizResult,
   getQuizAnalytics,
   getStudentQuizProgress,
+  // Course enrollment functions
+  enrollStudentInCourse,
+  unenrollStudentFromCourse,
+  getEnrolledCoursesWithProgress,
+  updateCourseProgress,
+  getCourseCompletionStatus,
   // Data management
   exportData,
   importData,
