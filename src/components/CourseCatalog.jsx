@@ -11,6 +11,7 @@ const CourseCatalog = ({ student, setStudent }) => {
   const [showQuiz, setShowQuiz] = useState(false);
   const [currentQuiz, setCurrentQuiz] = useState(null);
   const [expandedCourses, setExpandedCourses] = useState({});
+  const [isVideoSticky, setIsVideoSticky] = useState(false);
 
   // Load courses from storage
   useEffect(() => {
@@ -22,6 +23,22 @@ const CourseCatalog = ({ student, setStudent }) => {
     console.log('Loaded courses:', coursesData);
     setCourses(coursesData || {});
   };
+
+  // Handle scroll for sticky video
+  useEffect(() => {
+    const handleScroll = () => {
+      if (selectedCourse) {
+        const videoElement = document.querySelector('.multimedia-viewer');
+        if (videoElement) {
+          const rect = videoElement.getBoundingClientRect();
+          setIsVideoSticky(rect.top <= 0);
+        }
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [selectedCourse]);
 
   // Toggle course expansion
   const toggleCourseExpansion = (courseKey) => {
@@ -86,6 +103,8 @@ const CourseCatalog = ({ student, setStudent }) => {
     setSelectedCourse(courseKey);
     setCurrentLesson(lessonIndex);
     setShowQuiz(false);
+    // Scroll to top when starting a lesson
+    window.scrollTo(0, 0);
   };
 
   const completeLesson = (courseKey, lessonId) => {
@@ -141,15 +160,22 @@ const CourseCatalog = ({ student, setStudent }) => {
           {isCompleted && <span className="completion-badge">Completed ✓</span>}
         </div>
         
+        {/* Multimedia Content - Sticky at top */}
+        {lesson.multimedia && lesson.multimedia.length > 0 && (
+          <div className={`multimedia-container ${isVideoSticky ? 'sticky' : ''}`}>
+            <MultimediaViewer multimedia={lesson.multimedia} />
+            {isVideoSticky && (
+              <div className="sticky-indicator">
+                📺 Playing: {lesson.title}
+              </div>
+            )}
+          </div>
+        )}
+
         <div className="lesson-content">
           <p>{lesson.content}</p>
           <p><strong>Duration:</strong> {lesson.duration}</p>
         </div>
-
-        {/* Multimedia Content */}
-        {lesson.multimedia && lesson.multimedia.length > 0 && (
-          <MultimediaViewer multimedia={lesson.multimedia} />
-        )}
 
         {/* Quiz Section */}
         {lesson.quiz && !showQuiz && (
