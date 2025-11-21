@@ -1,6 +1,14 @@
 import React from 'react';
 import { usePaystackPayment } from 'react-paystack';
 
+
+touch src/components/payments/PaymentModal.jsx
+touch src/components/payments/PaystackPayment.jsx
+touch src/components/payments/FlutterwavePayment.jsx
+touch src/components/payments/MonnifyPayment.jsx
+touch src/components/payments/PaymentModal.css
+
+
 const PaystackPayment = ({ lesson, student, onSuccess, onClose }) => {
   const config = {
     reference: new Date().getTime().toString(),
