@@ -1,0 +1,172 @@
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.payment-modal {
+  background: white;
+  border-radius: 12px;
+  padding: 24px;
+  max-width: 500px;
+  width: 90%;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+}
+
+.payment-header {
+  display: flex;
+  justify-content: between;
+  align-items: center;
+  margin-bottom: 20px;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 15px;
+}
+
+.payment-header h3 {
+  margin: 0;
+  color: #333;
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  color: #666;
+}
+
+.lesson-info {
+  background: #f8f9fa;
+  padding: 15px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+}
+
+.lesson-info h4 {
+  margin: 0 0 10px 0;
+  color: #333;
+}
+
+.price {
+  font-size: 18px;
+  font-weight: bold;
+  color: #28a745;
+  margin: 0;
+}
+
+.payment-methods {
+  margin: 20px 0;
+}
+
+.payment-methods h4 {
+  margin-bottom: 15px;
+  color: #333;
+}
+
+.payment-option {
+  display: flex;
+  align-items: center;
+  padding: 15px;
+  border: 2px solid #e1e5e9;
+  border-radius: 8px;
+  margin-bottom: 10px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.payment-option:hover {
+  border-color: #007bff;
+  background: #f8f9fa;
+}
+
+.payment-option input[type="radio"] {
+  margin-right: 10px;
+}
+
+.method-icon {
+  font-size: 20px;
+  margin-right: 10px;
+}
+
+.method-info {
+  flex: 1;
+}
+
+.method-name {
+  display: block;
+  font-weight: bold;
+  font-size: 16px;
+  color: #333;
+}
+
+.method-desc {
+  font-size: 12px;
+  color: #666;
+}
+
+.payment-form {
+  margin: 20px 0;
+}
+
+.payment-btn {
+  width: 100%;
+  padding: 15px;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+
+.paystack-btn {
+  background: #007bff;
+  color: white;
+}
+
+.paystack-btn:hover {
+  background: #0056b3;
+}
+
+.flutterwave-btn {
+  background: #f5a623;
+  color: white;
+}
+
+.flutterwave-btn:hover {
+  background: #e69500;
+}
+
+.monnify-btn {
+  background: #6f42c1;
+  color: white;
+}
+
+.monnify-btn:hover {
+  background: #5a2d91;
+}
+
+.payment-note {
+  font-size: 12px;
+  color: #666;
+  text-align: center;
+  margin-top: 10px;
+}
+
+.payment-security {
+  text-align: center;
+  margin-top: 15px;
+  padding-top: 15px;
+  border-top: 1px solid #eee;
+  font-size: 12px;
+  color: #666;
+}

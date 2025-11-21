@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { getCourses } from '../utils/storage';
 import Quiz from './Quiz';
 import MultimediaViewer from './MultimediaViewer';
+import PaymentModal from './payments/PaymentModal';
+import { processTeacherPayment } from '../utils/teacherPaymentService';
 import './CourseCatalog.css';
 
 const CourseCatalog = ({ student, setStudent }) => {
@@ -11,6 +13,8 @@ const CourseCatalog = ({ student, setStudent }) => {
   const [showQuiz, setShowQuiz] = useState(false);
   const [currentQuiz, setCurrentQuiz] = useState(null);
   const [expandedCourses, setExpandedCourses] = useState({});
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [selectedLesson, setSelectedLesson] = useState(null);
 
   // Load courses from storage
   useEffect(() => {
@@ -82,14 +86,25 @@ const CourseCatalog = ({ student, setStudent }) => {
     setCurrentQuiz(null);
   };
 
-  // SINGLE handleStartLesson function (duplicate removed)
+  // UPDATED: Handle starting a lesson with payment modal for locked lessons
   const handleStartLesson = (courseKey, lessonIndex) => {
     const course = courses[courseKey];
     const lesson = course.lessons[lessonIndex];
 
-    // Check if lesson is locked
+    // Check if lesson is locked - show payment modal instead of alert
     if (lesson.isLocked) {
-      alert('🔒 This lesson is locked and requires payment to access. Please contact the teacher or administrator.');
+      setSelectedLesson({ 
+        courseKey, 
+        lessonIndex, 
+        lesson: { 
+          ...lesson, 
+          courseId: courseKey,
+          price: lesson.price || 500, // Default price if not set
+          teacherId: course.teacherId || 'default_teacher', // Get teacher ID from course
+          teacherName: course.teacherName || 'Course Teacher' // Get teacher name from course
+        } 
+      });
+      setShowPaymentModal(true);
       return;
     }
 
@@ -98,6 +113,56 @@ const CourseCatalog = ({ student, setStudent }) => {
     setShowQuiz(false);
     // Scroll to top when starting a lesson
     window.scrollTo(0, 0);
+  };
+
+  // UPDATED: Handle payment success with teacher payout
+  const handlePaymentSuccess = async (paymentData) => {
+    console.log('Payment successful:', paymentData);
+    
+    if (selectedLesson) {
+      try {
+        // 1. Process teacher payment and payout
+        const teacherPaymentSuccess = await processTeacherPayment(
+          paymentData, 
+          selectedLesson.lesson, 
+          student
+        );
+
+        // 2. Unlock the lesson locally
+        const updatedCourses = { ...courses };
+        updatedCourses[selectedLesson.courseKey].lessons[selectedLesson.lessonIndex].isLocked = false;
+        setCourses(updatedCourses);
+        
+        // 3. Start the lesson
+        setSelectedCourse(selectedLesson.courseKey);
+        setCurrentLesson(selectedLesson.lessonIndex);
+        setShowPaymentModal(false);
+        setSelectedLesson(null);
+        
+        // 4. Show appropriate success message
+        if (teacherPaymentSuccess) {
+          alert('🎉 Payment successful! Lesson unlocked and teacher payment processed.');
+        } else {
+          alert('🎉 Payment successful! Lesson unlocked. Teacher payment is being processed.');
+        }
+        
+      } catch (error) {
+        console.error('Error processing teacher payment:', error);
+        
+        // Still unlock the lesson even if teacher payment fails
+        const updatedCourses = { ...courses };
+        updatedCourses[selectedLesson.courseKey].lessons[selectedLesson.lessonIndex].isLocked = false;
+        setCourses(updatedCourses);
+        
+        // Start the lesson
+        setSelectedCourse(selectedLesson.courseKey);
+        setCurrentLesson(selectedLesson.lessonIndex);
+        setShowPaymentModal(false);
+        setSelectedLesson(null);
+        
+        alert('🎉 Payment successful! Lesson unlocked. There was an issue with teacher payout - support will handle it.');
+      }
+    }
   };
 
   const completeLesson = (courseKey, lessonId) => {
@@ -152,6 +217,13 @@ const CourseCatalog = ({ student, setStudent }) => {
           <h2>{lesson.title}</h2>
           {isCompleted && <span className="completion-badge">Completed ✓</span>}
         </div>
+
+        {/* Show teacher info if available */}
+        {course.teacherName && (
+          <div className="teacher-info">
+            <strong>Instructor:</strong> {course.teacherName}
+          </div>
+        )}
 
         {/* Multimedia Content - Simple normal behavior */}
         {lesson.multimedia && lesson.multimedia.length > 0 && (
@@ -235,6 +307,12 @@ const CourseCatalog = ({ student, setStudent }) => {
               <span className="course-thumbnail">{course.thumbnail}</span>
               <div className="course-title-section">
                 <h3>{course.title}</h3>
+                {/* Show teacher name if available */}
+                {course.teacherName && (
+                  <div className="course-teacher">
+                    <small>By: {course.teacherName}</small>
+                  </div>
+                )}
                 <button 
                   onClick={() => toggleCourseExpansion(key)}
                   className="expand-btn"
@@ -285,7 +363,7 @@ const CourseCatalog = ({ student, setStudent }) => {
               <div className="lessons-list">
                 {course.lessons.map((lesson, index) => {
                   const isLessonCompleted = student.completedLessons.includes(`${key}-${lesson.id}`);
-                  const isLessonLocked = lesson.isLocked; // NEW: Check if lesson is locked
+                  const isLessonLocked = lesson.isLocked;
 
                   return (
                     <div key={lesson.id} className={`lesson-item ${isLessonCompleted ? 'completed' : ''} ${isLessonLocked ? 'locked' : ''}`}>
@@ -294,6 +372,9 @@ const CourseCatalog = ({ student, setStudent }) => {
                           <span className="lesson-title">
                             {lesson.title}
                             {isLessonLocked && <span className="lock-icon"> 🔒</span>}
+                            {isLessonLocked && lesson.price && (
+                              <span className="lesson-price"> - ₦{lesson.price}</span>
+                            )}
                           </span>
                           <span className="lesson-duration">{lesson.duration}</span>
                         </div>
@@ -315,10 +396,10 @@ const CourseCatalog = ({ student, setStudent }) => {
                       <div className="lesson-actions">
                         <button 
                           onClick={() => handleStartLesson(key, index)}
-                          disabled={isLessonCompleted || isLessonLocked} // NEW: Disable if locked
+                          disabled={isLessonCompleted}
                           className={isLessonCompleted ? 'completed-btn' : isLessonLocked ? 'locked-btn' : 'start-btn'}
                         >
-                          {isLessonCompleted ? 'Completed' : isLessonLocked ? 'Locked' : 'Start Lesson'}
+                          {isLessonCompleted ? 'Completed' : isLessonLocked ? `Unlock - ₦${lesson.price || 500}` : 'Start Lesson'}
                         </button>
                       </div>
                     </div>
@@ -329,6 +410,15 @@ const CourseCatalog = ({ student, setStudent }) => {
           </div>
         ))}
       </div>
+
+      {/* Payment Modal */}
+      <PaymentModal
+        isOpen={showPaymentModal}
+        onClose={() => setShowPaymentModal(false)}
+        lesson={selectedLesson?.lesson}
+        student={student}
+        onPaymentSuccess={handlePaymentSuccess}
+      />
     </div>
   );
 };
