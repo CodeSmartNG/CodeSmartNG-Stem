@@ -1,5 +1,13 @@
 import React, { useEffect } from 'react';
 
+touch src/components/payments/PaymentModal.jsx
+touch src/components/payments/PaystackPayment.jsx
+touch src/components/payments/FlutterwavePayment.jsx
+touch src/components/payments/MonnifyPayment.jsx
+touch src/components/payments/PaymentModal.css
+
+
+
 const MonnifyPayment = ({ lesson, student, onSuccess, onClose }) => {
   useEffect(() => {
     // Load Monnify script
