@@ -110,6 +110,36 @@ const CourseCatalog = ({ student, setStudent }) => {
     }
   };
 
+
+
+
+// In TeacherDashboard.jsx, update the handleAddLesson function:
+
+const handleAddLesson = (e) => {
+  e.preventDefault();
+  try {
+    const lessonData = {
+      title: newLessonForm.title,
+      content: newLessonForm.content,
+      duration: newLessonForm.duration,
+      completed: false,
+      isLocked: newLessonForm.isLocked || false, // NEW: Include lock status
+      multimedia: [],
+      quiz: null
+    };
+
+    // ... rest of the function remains the same
+  } catch (error) {
+    alert('Error adding lesson: ' + error.message);
+  }
+};
+
+
+
+
+
+
+
   const handleViewCertificate = (courseKey) => {
     const course = courses[courseKey];
     alert(`🏆 Congratulations to ${student.name}!\n\nYou have completed the course: ${course.title}\n\nDate: ${new Date().toLocaleDateString()}\n\nYou can get your certificate at the office!`);
