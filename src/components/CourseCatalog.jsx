@@ -113,26 +113,71 @@ const CourseCatalog = ({ student, setStudent }) => {
 
 
 
-// In TeacherDashboard.jsx, update the handleAddLesson function:
 
-const handleAddLesson = (e) => {
-  e.preventDefault();
-  try {
-    const lessonData = {
-      title: newLessonForm.title,
-      content: newLessonForm.content,
-      duration: newLessonForm.duration,
-      completed: false,
-      isLocked: newLessonForm.isLocked || false, // NEW: Include lock status
-      multimedia: [],
-      quiz: null
-    };
+// In the CourseCatalog component, update the handleStartLesson function:
 
-    // ... rest of the function remains the same
-  } catch (error) {
-    alert('Error adding lesson: ' + error.message);
+const handleStartLesson = (courseKey, lessonIndex) => {
+  const course = courses[courseKey];
+  const lesson = course.lessons[lessonIndex];
+  
+  // Check if lesson is locked
+  if (lesson.isLocked) {
+    alert('🔒 This lesson is locked and requires payment to access. Please contact the teacher or administrator.');
+    return;
   }
+  
+  setSelectedCourse(courseKey);
+  setCurrentLesson(lessonIndex);
+  setShowQuiz(false);
+  // Scroll to top when starting a lesson
+  window.scrollTo(0, 0);
 };
+
+// Also update the lesson actions in the course catalog view to show locked status:
+// In the main course catalog return statement, find the lesson-item mapping and update it:
+
+{course.lessons.map((lesson, index) => {
+  const isLessonCompleted = student.completedLessons.includes(`${key}-${lesson.id}`);
+  const isLessonLocked = lesson.isLocked; // NEW: Check if lesson is locked
+  
+  return (
+    <div key={lesson.id} className={`lesson-item ${isLessonCompleted ? 'completed' : ''} ${isLessonLocked ? 'locked' : ''}`}>
+      <div className="lesson-info">
+        <div className="lesson-main-info">
+          <span className="lesson-title">
+            {lesson.title}
+            {isLessonLocked && <span className="lock-icon"> 🔒</span>}
+          </span>
+          <span className="lesson-duration">{lesson.duration}</span>
+        </div>
+        <div className="lesson-features">
+          {lesson.multimedia && lesson.multimedia.length > 0 && (
+            <span className="media-indicator" title="Has learning materials">🎬</span>
+          )}
+          {lesson.quiz && (
+            <span className="quiz-indicator" title="Has quiz questions">📝</span>
+          )}
+          {isLessonCompleted && (
+            <span className="completion-indicator" title="Lesson completed">✅</span>
+          )}
+          {isLessonLocked && (
+            <span className="lock-indicator" title="Locked lesson">🔒</span>
+          )}
+        </div>
+      </div>
+      <div className="lesson-actions">
+        <button 
+          onClick={() => handleStartLesson(key, index)}
+          disabled={isLessonCompleted || isLessonLocked} // NEW: Disable if locked
+          className={isLessonCompleted ? 'completed-btn' : isLessonLocked ? 'locked-btn' : 'start-btn'}
+        >
+          {isLessonCompleted ? 'Completed' : isLessonLocked ? 'Locked' : 'Start Lesson'}
+        </button>
+      </div>
+    </div>
+  );
+})}
+
 
 
 
