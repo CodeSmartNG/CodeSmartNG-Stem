@@ -10,37 +10,9 @@ import {
   addMultimediaToLesson,
   deleteMultimediaFromLesson,
   getTeacherStats,
-  toggleLessonLock // We'll need to add this function to storage.js
+  toggleLessonLock
 } from '../utils/storage';
 import './TeacherDashboard.css';
-
-
-
-// In TeacherDashboard.jsx, update the handleAddLesson function:
-
-const handleAddLesson = (e) => {
-  e.preventDefault();
-  try {
-    const lessonData = {
-      title: newLessonForm.title,
-      content: newLessonForm.content,
-      duration: newLessonForm.duration,
-      completed: false,
-      isLocked: newLessonForm.isLocked || false, // NEW: Include lock status
-      multimedia: [],
-      quiz: null
-    };
-
-    // ... rest of the function remains the same
-  } catch (error) {
-    alert('Error adding lesson: ' + error.message);
-  }
-};
-
-
-
-
-
 
 const TeacherDashboard = () => {
   const [activeTab, setActiveTab] = useState('overview');
@@ -145,7 +117,6 @@ const TeacherDashboard = () => {
   // NEW: Function to toggle lesson lock status
   const handleToggleLessonLock = (courseKey, lessonId, currentStatus) => {
     try {
-      // We'll need to implement this function in storage.js
       toggleLessonLock(courseKey, lessonId, !currentStatus);
       alert(`Lesson ${!currentStatus ? 'locked' : 'unlocked'} successfully!`);
       loadData();
@@ -299,9 +270,9 @@ const TeacherDashboard = () => {
         content: newLessonForm.content,
         duration: newLessonForm.duration,
         completed: false,
+        isLocked: newLessonForm.isLocked || false, // NEW: Include lock status
         multimedia: [],
-        quiz: null,
-        isLocked: newLessonForm.isLocked // NEW: Include lock status
+        quiz: null
       };
 
       // Add video if provided
@@ -932,7 +903,6 @@ const TeacherDashboard = () => {
 
                 {showQuizForm && (
                   <div className="quiz-form">
-                    {/* ... existing quiz form content remains the same ... */}
                     <div className="form-group">
                       <label>Quiz Title</label>
                       <input
