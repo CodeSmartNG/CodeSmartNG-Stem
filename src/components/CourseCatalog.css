@@ -1,3 +1,25 @@
+/* Add to CourseCatalog.css */
+.lesson-item.locked {
+  background-color: #f8f9fa;
+  border-left: 4px solid #ffc107;
+  opacity: 0.7;
+}
+
+.locked-btn {
+  background-color: #6c757d !important;
+  color: white !important;
+  cursor: not-allowed !important;
+}
+
+.lock-icon {
+  color: #ffc107;
+  margin-left: 5px;
+}
+
+.lock-indicator {
+  color: #ffc107;
+}
+
 /* CourseCatalog.css - Fixed normal video behavior */
 
 .course-lesson {
