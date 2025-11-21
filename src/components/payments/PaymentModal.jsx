@@ -4,6 +4,13 @@ import FlutterwavePayment from './FlutterwavePayment';
 import MonnifyPayment from './MonnifyPayment';
 import './PaymentModal.css';
 
+
+touch src/components/payments/PaymentModal.jsx
+touch src/components/payments/PaystackPayment.jsx
+touch src/components/payments/FlutterwavePayment.jsx
+touch src/components/payments/MonnifyPayment.jsx
+touch src/components/payments/PaymentModal.css
+
 const PaymentModal = ({ isOpen, onClose, lesson, student, onPaymentSuccess }) => {
   const [selectedMethod, setSelectedMethod] = useState('paystack');
 
