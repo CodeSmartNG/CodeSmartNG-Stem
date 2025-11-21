@@ -1,5 +1,18 @@
+
 import React from 'react';
 import { FlutterWaveButton, closePaymentModal } from 'flutterwave-react-v3';
+
+
+
+# Create payments directory
+mkdir -p src/components/payments
+
+# Create all payment component files
+touch src/components/payments/PaymentModal.jsx
+touch src/components/payments/PaystackPayment.jsx
+touch src/components/payments/FlutterwavePayment.jsx
+touch src/components/payments/MonnifyPayment.jsx
+touch src/components/payments/PaymentModal.css
 
 const FlutterwavePayment = ({ lesson, student, onSuccess, onClose }) => {
   const config = {
