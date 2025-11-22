@@ -82,7 +82,7 @@ const CourseCatalog = ({ student, setStudent }) => {
     setCurrentQuiz(null);
   };
 
-  // SINGLE handleStartLesson function (duplicate removed)
+  // UPDATED: Handle starting a lesson with lock check
   const handleStartLesson = (courseKey, lessonIndex) => {
     const course = courses[courseKey];
     const lesson = course.lessons[lessonIndex];
