@@ -5,11 +5,6 @@ import { FlutterWaveButton, closePaymentModal } from 'flutterwave-react-v3';
 
 
 
-touch src/components/payments/PaymentModal.jsx
-touch src/components/payments/PaystackPayment.jsx
-touch src/components/payments/FlutterwavePayment.jsx
-touch src/components/payments/MonnifyPayment.jsx
-touch src/components/payments/PaymentModal.css
 
 const FlutterwavePayment = ({ lesson, student, onSuccess, onClose }) => {
   const config = {
